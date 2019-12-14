@@ -1,4 +1,3 @@
 # Mario-Clone-Without-Rigidbody-collisions
-This is a Mario Clone with raycast collisions
-
+Este es un clon de Mario usando una versión adaptada del control de Sebastian Lague
 
