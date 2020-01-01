@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStates : MonoBehaviour
+public class PlayerStates : Personaje
 {
 
 
@@ -18,9 +18,6 @@ bool cambioEstado;
 float transtimer;
 
 
-BoxCollider2D boxCollider;
-
-Player player;
 
 
 
@@ -31,25 +28,15 @@ Player player;
   void Start() {
         
 
-        boxCollider = GetComponent<BoxCollider2D>();
-
-        player = GetComponent <Player>();
-
+      
+ Init();
 
         
 
 
-    }
-
-       void Awake () 
-    {
-        spriteRenderer = GetComponent<SpriteRenderer> ();    
-        animator = GetComponent<Animator> ();
+}
 
 
-
-
-    }
 
  
 
@@ -108,7 +95,7 @@ Player player;
    
          //animator.runtimeAnimatorController = Marios[0];
 
-         animator.SetLayerWeight (1, 0);
+         anim.SetLayerWeight (1, 0);
 
          break;
 
@@ -148,25 +135,33 @@ Player player;
 
  void Crecer(){
 
- animator.SetBool ("Crecer",true);
+ anim.SetBool ("Crecer",true);
  transtimer += Time.fixedDeltaTime;
 
 
-
+Manager._manager.Pausarenemigo();
     
 
      if(transtimer > 0.4){
 
-         animator.SetBool("Crecer",false);
+         anim.SetBool("Crecer",false);
+
+          Manager._manager.Reanudarenemigo();
      }
 
-     animator.SetLayerWeight (1, 1);
+     anim.SetLayerWeight (1, 1);
 
 
  }
 
 
+public void Activarsuscripcion(){
 
+  Manager._manager.Suscripcion();
+
+
+  transtimer = 0;
+}
  
 
 

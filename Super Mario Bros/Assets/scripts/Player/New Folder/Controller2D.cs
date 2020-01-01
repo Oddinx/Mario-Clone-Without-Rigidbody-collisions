@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using System;
 public class Controller2D : RaycastController {
 	
 	float maxClimbAngle = 80;
@@ -10,13 +10,21 @@ public class Controller2D : RaycastController {
 	Vector2 playerInput;
 
 	public int collisionMask { get; set; }
-	BoxCollider2D _collider;
+	
+
+		 public event Action <Collider2D> horizontalcolision;
+
+	 public event Action <Collider2D> verticalcolision;
+
+     public event Action <Collider2D> horizontalTrigger;
+
+	 public event Action <Collider2D> verticallTrigger;
 	public override void Start() {
 		base.Start ();
 		collisions.faceDir = 1;
   
 
-  _collider = GetComponent<BoxCollider2D>();
+
 
   for (int i = 0; i < 32; i++) {
 			collisionMask |= (1 << i);
@@ -27,11 +35,11 @@ public class Controller2D : RaycastController {
 	}
  
 	
-	public void Move(Vector3 velocity, bool standingOnPlatform) {
+	public void Move(Vector2 velocity, bool standingOnPlatform) {
 		Move (velocity, Vector2.zero, standingOnPlatform);
 	}
 
-	public void Move(Vector3 velocity, Vector2 input, bool standingOnPlatform = false) {
+	public void Move(Vector2 velocity, Vector2 input, bool standingOnPlatform = false) {
 		UpdateRaycastOrigins ();
 		collisions.Reset ();
 		collisions.velocityOld = velocity;
@@ -57,7 +65,7 @@ public class Controller2D : RaycastController {
 		}
 	}
 
-	void HorizontalCollisions(ref Vector3 velocity) {
+	void HorizontalCollisions(ref Vector2 velocity) {
 		float directionX = collisions.faceDir;
 		float rayLength = Mathf.Abs (velocity.x) + skinWidth;
       
@@ -82,14 +90,27 @@ public class Controller2D : RaycastController {
 
                 if(hit.collider.isTrigger){
 
-					SendMessage("OnHorizontalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
+					if(horizontalTrigger !=null)
+                        
+						horizontalTrigger(hit.collider);
+
+					
+
+					//SendMessage("OnHorizontalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
+
+					if(hit.collider.tag != this.collider.tag){
 
 					continue;
+					
+					}
 				} else {
                      
-                   
+                       if(horizontalcolision !=null)
+                          horizontalcolision(hit.collider);
+				   
+				   
 
-                  SendMessage ("OnHorizontalCollisionEnter", hit.collider, SendMessageOptions.DontRequireReceiver);
+                  //SendMessage ("OnHorizontalCollisionEnter", hit.collider, SendMessageOptions.DontRequireReceiver);
 				}
 
 			}
@@ -134,7 +155,7 @@ public class Controller2D : RaycastController {
 
 	
 
-	void VerticalCollisions(ref Vector3 velocity) {
+	void VerticalCollisions(ref Vector2 velocity) {
 		float directionY = Mathf.Sign (velocity.y);
 		float rayLength = Mathf.Abs (velocity.y) + skinWidth;
 
@@ -151,12 +172,24 @@ public class Controller2D : RaycastController {
 
                 if(hit.collider.isTrigger){
 
-					SendMessage("OnVerticalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
+					//SendMessage("OnVerticalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
+
+					 if(verticallTrigger != null)
+
+						verticallTrigger(hit.collider);
+					
+
+					if(hit.collider.tag != this.collider.tag && hit.collider.tag !="Enemigo"){
+                     continue;
+				  }
 				} else {
-                     
+                      if(verticalcolision!=null)
+                        verticalcolision(hit.collider);
+
+				   
                    
 
-                  SendMessage ("OnVerticalCollisionEnter", hit.collider, SendMessageOptions.DontRequireReceiver);
+                  //SendMessage ("OnVerticalCollisionEnter", hit.collider, SendMessageOptions.DontRequireReceiver);
 				}
 
 			}
@@ -208,7 +241,7 @@ public class Controller2D : RaycastController {
 		}
 	}
 
-	void ClimbSlope(ref Vector3 velocity, float slopeAngle) {
+	void ClimbSlope(ref Vector2 velocity, float slopeAngle) {
 		float moveDistance = Mathf.Abs (velocity.x);
 		float climbVelocityY = Mathf.Sin (slopeAngle * Mathf.Deg2Rad) * moveDistance;
 
@@ -221,7 +254,7 @@ public class Controller2D : RaycastController {
 		}
 	}
 
-	void DescendSlope(ref Vector3 velocity) {
+	void DescendSlope(ref Vector2 velocity) {
 		float directionX = Mathf.Sign (velocity.x);
 		Vector2 rayOrigin = (directionX == -1) ? raycastOrigins.bottomRight : raycastOrigins.bottomLeft;
 		RaycastHit2D hit = Physics2D.Raycast (rayOrigin, -Vector2.up, Mathf.Infinity, collisionMask);
@@ -247,15 +280,7 @@ public class Controller2D : RaycastController {
 
 
 
-	public void SetIsTrigger(bool isTrigger) {
 
-		_collider.isTrigger = isTrigger;
-	}
-
-   	public bool GetTrigger(bool isTrigger) {
-
-		return _collider.isTrigger;
-	}
 
 
 	void ResetFallingThroughPlatform() {
@@ -269,7 +294,7 @@ public class Controller2D : RaycastController {
 		public bool climbingSlope;
 		public bool descendingSlope;
 		public float slopeAngle, slopeAngleOld;
-		public Vector3 velocityOld;
+		public Vector2 velocityOld;
 		public int faceDir;
 		public bool fallingThroughPlatform;
 

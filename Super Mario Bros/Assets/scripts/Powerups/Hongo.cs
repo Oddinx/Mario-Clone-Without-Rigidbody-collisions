@@ -35,13 +35,13 @@ public class Hongo : MonoBehaviour
 
 float gravity = -20;
 
-
+private Hongo hongo;
 Controller2D controller;
     // Start is called before the first frame update
     void Start()
     {
        
-
+       hongo = this;
 
 
             boxCollider = GetComponent<BoxCollider2D>();
@@ -50,6 +50,11 @@ Controller2D controller;
     controller = GetComponent<Controller2D>();
 
  prevlayer = LayerMask.GetMask("Ground","Obstaculo","Player","Premiobloque") ;
+
+         controller.horizontalcolision +=OnHorizontalCollisionEnter;
+		controller.verticalcolision +=OnVerticalCollisionEnter;
+
+      Manager._manager.Destruirpremio += Destroy;
   
  
     }
@@ -157,10 +162,19 @@ void Cambiodedireccion(){
 speed *=-1;
 
 }
-void Destroy(){
+public void Destroy(){
 
 
- Destroy(this.gameObject);
+ 
+
+  if(hongo !=null && hongo == this.hongo){
+    Destroy(this.gameObject);
+ controller.horizontalcolision -=OnHorizontalCollisionEnter;
+		controller.verticalcolision -=OnVerticalCollisionEnter;
+
+       Manager._manager.Destruirpremio -= Destroy;
+
+ }
 
 
 }

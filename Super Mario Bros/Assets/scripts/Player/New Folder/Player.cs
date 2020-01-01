@@ -2,74 +2,39 @@
 using System.Collections;
 
 [RequireComponent (typeof (Controller2D))]
-public class Player : MonoBehaviour{
+public class Player : Personaje{
 
 
 
 //[SerializeField]   private  LayerMask groundLayerMask;
-
-	public float maxJumpHeight = 4;
-	public float minJumpHeight = 1;
-	public float timeToJumpApex = .4f;
 	float accelerationTimeAirborne = .2f;
 	float accelerationTimeGrounded = .1f;
 	public float moveSpeed = 6;
-
-
-
-
-
-	float gravity;
-	float maxJumpVelocity;
-	float minJumpVelocity;
-	Vector3 velocity,autovelocity;
 	float velocityXSmoothing;
 
-	Controller2D controller;
-
-	Animator anim;
-
-    BoxCollider2D boxCollider;
-
-        public float timer = 0f,_blinkTimer,blinkTime = 0.1f,_blinkAmount,transtimer;
-
+    public float timer = 0f,_blinkTimer,blinkTime = 0.1f,_blinkAmount,timerfinal;
      public float rundecend = 0;
-
      public bool buttoninactive;
-
 	   public KeyCode run; 
-
-
-
-	
-
-	  PlayerStates playerStates;
-
-
- public bool final,Intangible,grounded = true,lanzarcaparazon;
- protected SpriteRenderer  _renderer;
-
+ public bool final,Intangible,grounded = true,lanzarcaparazon,choquefinal,bounce,muerto;
 
     
 
 	void Start() {
-		controller = GetComponent<Controller2D> ();
-        anim = GetComponent<Animator>();
-		boxCollider = GetComponent<BoxCollider2D>();
-		gravity = -(2 * maxJumpHeight) / Mathf.Pow (timeToJumpApex, 2);
-		maxJumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
-		minJumpVelocity = Mathf.Sqrt (2 * Mathf.Abs (gravity) * minJumpHeight);
+	     Init();
 
-        
-		
+	      
+		final = false;
 
+		choquefinal = false;
+
+		controller.horizontalcolision +=OnHorizontalCollisionEnter;
+		controller.verticalcolision +=OnVerticalCollisionEnter;
+
+		controller.horizontalTrigger +=OnHorizontalTriggerEnter;
+
+		controller.verticallTrigger += OnVerticalTriggerEnter;
 	
-
-	  
-
-		 playerStates = GetComponent<PlayerStates>();
-
-		 	_renderer = GetComponent<SpriteRenderer> ();
 
 
 	}
@@ -80,8 +45,8 @@ public class Player : MonoBehaviour{
 		
    setIntangible(Intangible);
 		
-
-       autovelocity.x = moveSpeed;
+velocity += acceleration;
+    
      
 
 		Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
@@ -161,67 +126,26 @@ if(input.x < -0.1f){
 		}
 
       //Contador de tiempo de cuando el bototn correr no esta presionado
-     if(buttoninactive == true){
- rundecend += Time.deltaTime;
 
- if(rundecend > 3){
-
-
-    buttoninactive = false;
-    rundecend = 0;
-    moveSpeed = 6.03f;
-
-	maxJumpHeight = 4f;
- } else if( rundecend > 2){
-
-         moveSpeed= 8f;
-		 maxJumpHeight = 5;
-       }else if(rundecend > 1){
-
-         moveSpeed= 12f;
-
-		 maxJumpHeight = 5.5f;
-       }
-
-      
-}
 
 //Funciones para correr
-     if(Input.GetKey(run) && grounded){
-       timer += Time.deltaTime;
-       rundecend = 0;
-       buttoninactive = true;
-        if(timer > 2){
+  DefineMoveSpeed();
 
-         moveSpeed = 15f;
+// Si hemos aplastado algun enemigo, Mario hara un pequeño salto ,cuando el contador sea mayor a 0.1 la fuerza aplicada para ese pequeño salto se desactivara y el contador también se desactivara	 
+  if(bounce){
 
-		 maxJumpHeight = 5.5f;
+		   contadorapplyforce += Time.fixedDeltaTime;
+		if(contadorapplyforce >= 0.05){
 
-        }else if(timer > 1){
-         moveSpeed = 12f;
+         acceleration = Vector3.zero;
 
-		 maxJumpHeight = 5f;
-           
-       } else if(timer >0.3f){
+		 contadorapplyforce = 0;
 
-         moveSpeed = 8f;
+		 bounce = false;
 
-		 maxJumpHeight = 4.5f;
-       }else if(timer == 0){
+		}
 
-          moveSpeed = 6.03f;
 	  }
-       
-       
-
-     }else if(Input.GetKeyUp(run) && grounded){
- 
-      timer = 0;
-      buttoninactive = true;
-
-     
-
-     }
 
 
      //boxcast
@@ -241,7 +165,91 @@ if(input.x < -0.1f){
 
 
 
+void DefineMoveSpeed(){
 
+ 
+
+
+    //Contador de tiempo de cuando el boton correr no esta presionado
+     if(buttoninactive == true){
+ rundecend += Time.deltaTime;
+
+ if(rundecend > 3){
+
+
+    buttoninactive = false;
+    rundecend = 0;
+    moveSpeed = 6.03f;
+
+	//maxJumpHeight = 4f;
+	gravitysetter(4f);
+ } else if( rundecend > 2){
+
+         moveSpeed= 8f;
+		// maxJumpHeight = 6;
+
+		gravitysetter(5f);
+       }else if(rundecend > 1){
+
+         moveSpeed= 12f;
+
+		 //maxJumpHeight = 7f;
+
+		 gravitysetter(5.5f);
+       }
+
+      
+}
+
+
+
+//Funciones para correr
+   if(Input.GetKey(run) && grounded){
+       timer += Time.deltaTime;
+       rundecend = 0;
+       buttoninactive = true;
+        if(timer > 2){
+
+         moveSpeed = 15f;
+
+		gravitysetter(5.5f);
+
+        }else if(timer > 1){
+         moveSpeed = 12f;
+
+	     gravitysetter(5f);
+           
+       } else if(timer >0.2f){
+
+         moveSpeed = 8f;
+
+	     
+
+		 gravitysetter(4.5f);
+		
+       }else if(timer == 0){
+
+          moveSpeed = 6.03f;
+
+		  
+	  }
+       
+       
+
+     }else if(Input.GetKeyUp(run) && grounded){
+ 
+      timer = 0;
+      buttoninactive = true;
+
+     
+
+     }
+
+
+
+
+	
+}
 
 public void Death(){
 
@@ -249,6 +257,17 @@ public void Death(){
 StartCoroutine(Muerte());
 
 }
+
+void Bounce(){
+
+		
+
+		bounce = true;
+
+		ApplyForce(Vector2.up*2.5f);
+
+
+	}
 
 void TakeDamage(){
 
@@ -377,6 +396,10 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 		if(collider.tag == "Ground" || collider.tag == "Obstaculo" ){
            
 		   moveSpeed = 6.03f;
+
+		   buttoninactive = false;
+
+		   maxJumpHeight = 4;
 		}
 		
 
@@ -393,14 +416,21 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
     
 
 	  if (collider.tag == "Hongo") {
-
+      Hongo hongo = collider.gameObject.GetComponent<Hongo>();
 		    Debug.Log("Triggereando");
+      if(playerStates.estado != 1){ 
 
 		playerStates.Actualizarestado(1);
-     collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+		playerStates.Activarsuscripcion();
+	  }
+     
+     //collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+	
+	       
 			
-
-		}
+          hongo.Destroy();
+		
+	  }
 
 		if(collider.tag == "Final"){
            
@@ -413,11 +443,18 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		if(collider.tag =="Enemigo"){
         
+		Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
+		playerStates.Activarsuscripcion();
 		 if(collider.gameObject.name == "Goomba"){
 
 		if (boxCollider.bounds.min.y > collider.bounds.max.y ) {
 
-				collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+				//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+
+				colisionenemigo.Destroy();
+                 
+				
+               Bounce();
 			}
 
 		 }
@@ -450,17 +487,25 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 
 		void OnVerticalTriggerEnter(Collider2D collider){
+
+			Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
              
 			 Debug.Log("Triggereando");
 			 if (collider.tag == "Hongo") {
-
+             
+			 Hongo hongo = collider.gameObject.GetComponent<Hongo>();
+			if(playerStates.estado != 1){ 
 		    playerStates.Actualizarestado(1);
+			playerStates.Activarsuscripcion();
+			}
 
 			
 	
 
-			collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
-
+			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+             
+            hongo.Destroy();
+			
 			
 
 		}
@@ -476,12 +521,14 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		
         	if(collider.gameObject.name == "Goomba"){
+
+				colisionenemigo.Destroy();
 	
-		collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+		//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
 
 			}
 
-	
+	         Bounce();
 
 		}
 
@@ -569,4 +616,4 @@ yield return new WaitForSeconds (1f);
 
 
 
-}
+	}
