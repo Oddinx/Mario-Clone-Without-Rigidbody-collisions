@@ -1,12 +1,14 @@
-﻿using UnityEngine;
+﻿
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 [RequireComponent (typeof (Controller2D))]
-public class Player : Personaje{
 
 
-
-//[SerializeField]   private  LayerMask groundLayerMask;
+public class Player : Personaje
+	
+{
 	float accelerationTimeAirborne = .2f;
 	float accelerationTimeGrounded = .1f;
 	public float moveSpeed = 6;
@@ -18,10 +20,15 @@ public class Player : Personaje{
 	   public KeyCode run; 
  public bool final,Intangible,grounded = true,lanzarcaparazon,choquefinal,bounce,muerto;
 
-    
+
+
+
 
 	void Start() {
-	     Init();
+
+	     
+	   //Inicializa la gravedad,boxcollider,animator y demás cosas
+     Init();
 
 	      
 		final = false;
@@ -35,33 +42,74 @@ public class Player : Personaje{
 
 		controller.verticallTrigger += OnVerticalTriggerEnter;
 	
-
-
 	}
 
 	void Update() {
 
+
+ 
+		
+
  controller.collisionMask &= ~(1 << 11);
+
+
 		
    setIntangible(Intangible);
 		
-velocity += acceleration;
-    
-     
 
-		Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+      velocity += acceleration;
+   
+ 
+	 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
 
-     
+       // moveSpeed = DefineMoveSpeed();
 		float targetVelocityX = input.x * moveSpeed;
 
 	velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below)?accelerationTimeGrounded:accelerationTimeAirborne);
 
+
+
+
+
+
+
 	if( final){
 
-			velocity.x = 0;
+		velocity.x = 0;
 
-			input.x = 0;
+		input.x = 0;
+
+		controller.collisionMask &= ~(1 << 13);
+
+		
+
+
+		if(choquefinal != true){
+
+         velocity.y = -5f;
+
+		 anim.SetBool("BajarBandera",true);
+
+		}else{
+
+			anim.SetBool("BajarBandera",false);
+
+			timerfinal += Time.deltaTime;
+            
+			if(timerfinal >=3){
+			 velocity.x = 0;
+
+			}else if(timerfinal >=2){
+			velocity.x = 6f;
+
+			}else if(timerfinal < 2){
+
+				velocity.x = 0f;
+			}
+		}
+
+			
 	}else{
 
 		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below)?accelerationTimeGrounded:accelerationTimeAirborne);
@@ -69,6 +117,8 @@ velocity += acceleration;
 		input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 	}
 
+
+     
 //CHECHG Detecta si estamos tocando el suelo o si estamos saltando
 checkg();
 
@@ -95,18 +145,14 @@ if(input.x < -0.1f){
 
 
 
-	
-		
-
-
-	
-
 		if (Input.GetKeyDown (KeyCode.Space)) {
-
+        
 			
 		
 			if (controller.collisions.below ) {
 				velocity.y = maxJumpVelocity;
+
+				
 			}
 		}
 		if (Input.GetKeyUp (KeyCode.Space) ) {
@@ -121,17 +167,30 @@ if(input.x < -0.1f){
 		velocity.y += gravity * Time.deltaTime;
 		controller.Move (velocity * Time.deltaTime, input);
 
+
+
 		if (controller.collisions.above || controller.collisions.below) {
 			velocity.y = 0;
 		}
 
       //Contador de tiempo de cuando el bototn correr no esta presionado
+  
 
 
 //Funciones para correr
-  DefineMoveSpeed();
+ DefineMoveSpeed();
 
-// Si hemos aplastado algun enemigo, Mario hara un pequeño salto ,cuando el contador sea mayor a 0.1 la fuerza aplicada para ese pequeño salto se desactivara y el contador también se desactivara	 
+
+
+
+     //boxcast
+
+
+
+
+	 //finboxcast
+
+ // Si hemos aplastado algun enemigo, Mario hara un pequeño salto ,cuando el contador sea mayor a 0.1 la fuerza aplicada para ese pequeño salto se desactivara y el contador también se desactivara	 
   if(bounce){
 
 		   contadorapplyforce += Time.fixedDeltaTime;
@@ -148,21 +207,10 @@ if(input.x < -0.1f){
 	  }
 
 
-     //boxcast
-
-
-
-
-	 //finboxcast
-
-
-
 
 
 	}
   
-
-
 
 
 void DefineMoveSpeed(){
@@ -174,7 +222,7 @@ void DefineMoveSpeed(){
      if(buttoninactive == true){
  rundecend += Time.deltaTime;
 
- if(rundecend > 3){
+ if(rundecend > 1){
 
 
     buttoninactive = false;
@@ -183,15 +231,15 @@ void DefineMoveSpeed(){
 
 	//maxJumpHeight = 4f;
 	gravitysetter(4f);
- } else if( rundecend > 2){
+ } else if( rundecend > 0.5){
 
          moveSpeed= 8f;
 		// maxJumpHeight = 6;
 
 		gravitysetter(5f);
-       }else if(rundecend > 1){
+       }else if(rundecend > 0.1){
 
-         moveSpeed= 12f;
+         moveSpeed= 10f;
 
 		 //maxJumpHeight = 7f;
 
@@ -210,16 +258,16 @@ void DefineMoveSpeed(){
        buttoninactive = true;
         if(timer > 2){
 
-         moveSpeed = 15f;
+         //moveSpeed = 15f;
 
 		gravitysetter(5.5f);
 
         }else if(timer > 1){
-         moveSpeed = 12f;
+         moveSpeed = 10f;
 
 	     gravitysetter(5f);
            
-       } else if(timer >0.2f){
+       } else if(timer >0.1f){
 
          moveSpeed = 8f;
 
@@ -251,14 +299,31 @@ void DefineMoveSpeed(){
 	
 }
 
+
+
 public void Death(){
+
+
+
+
 
 
 StartCoroutine(Muerte());
 
+
+
+
+
+		
+		
+		
+
 }
 
-void Bounce(){
+
+
+
+	void Bounce(){
 
 		
 
@@ -269,24 +334,18 @@ void Bounce(){
 
 	}
 
-void TakeDamage(){
+public void TakeDamage(){
 
 anim.SetTrigger("Daño");
+Intangible = true;
 
-
-
-	Intangible = true;
 
     if(Intangible){
 
 
 boxCollider.isTrigger = true;
 controller.collisionMask &= ~(1 << 9);
-}else {
-			
-			boxCollider.isTrigger = false;
-			controller.collisionMask |= (1 << 9);
-		}
+}
 
 
 }
@@ -317,6 +376,8 @@ if (_blinkTimer >= blinkTime) {
 
 }
 
+
+
 void setIntangible(bool Intangible ){
 
 
@@ -324,21 +385,22 @@ void setIntangible(bool Intangible ){
 if(Intangible){
 
 Blink ();
-//boxCollider.isTrigger = true;
-//controller.collisionMask &= ~(1 << 9);
-}//else {
-			
-	//		boxCollider.isTrigger = false;
-	//		controller.collisionMask |= (1 << 9);
-	//	}
 
+}else if(muerto!=true){
+
+		boxCollider.isTrigger = false;
+			controller.collisionMask |= (1 << 9);
+}
 
 }
+
+
 
 public IEnumerator Muerte(){
 
 
 anim.SetBool("Death",true);
+muerto = true;
 
 boxCollider.enabled= false;
 
@@ -348,19 +410,23 @@ moveSpeed = 0f;
 
 gravity = -17f;
 
-controller.collisionMask = LayerMask.GetMask("Nothing");
+
+
+controller.collisionMask = 0;
 
 yield return new WaitForSeconds(0.1f);
 transform.position = new Vector3(transform.position.x,2f,-2f);
+
+
 
  
 
 }
 
-	   //private bool IsGrounded(){
+	 //  private bool IsGrounded(){
 
-      //Bounds bounds = boxCollider.bounds;
-      // float extraHeightText = 1f;
+    //  Bounds bounds = boxCollider.bounds;
+    //  float extraHeightText = 1f;
 
 
      //RaycastHit2D raycastHit= Physics2D.BoxCast(bounds.center,new Vector2(0.5f,1.0f),0f,Vector2.down,extraHeightText,groundLayerMask);
@@ -368,7 +434,7 @@ transform.position = new Vector3(transform.position.x,2f,-2f);
 
       //if(raycastHit.collider != null){
 
-      //  rayColor = Color.green;
+      // rayColor = Color.green;
 
 	
 		
@@ -376,36 +442,35 @@ transform.position = new Vector3(transform.position.x,2f,-2f);
 
       //  rayColor = Color.red;
       //}
-      //Debug.DrawRay(bounds.center + new Vector3(bounds.extents.x,0),Vector2.down*(bounds.extents.y+extraHeightText),rayColor);
-      //Debug.DrawRay(bounds.center - new Vector3(bounds.extents.x,0),Vector2.down*(bounds.extents.y+extraHeightText),rayColor);
-      //Debug.DrawRay(bounds.center - new Vector3(bounds.extents.x,bounds.extents.y),Vector2.right*(bounds.extents.y),rayColor);
+     // Debug.DrawRay(bounds.center + new Vector3(bounds.extents.x,0),Vector2.down*(bounds.extents.y+extraHeightText),rayColor);
+     // Debug.DrawRay(bounds.center - new Vector3(bounds.extents.x,0),Vector2.down*(bounds.extents.y+extraHeightText),rayColor);
+     // Debug.DrawRay(bounds.center - new Vector3(bounds.extents.x,bounds.extents.y),Vector2.right*(bounds.extents.y),rayColor);
     
 
   
       
-     // return raycastHit.collider != null;
+   //   return raycastHit.collider != null;
 
-   // }
+   //}
+
+
 
 void OnHorizontalCollisionEnter(Collider2D collider) {
         
-	
-	
         timer = 0;
 
 		if(collider.tag == "Ground" || collider.tag == "Obstaculo" ){
            
 		   moveSpeed = 6.03f;
 
-		   buttoninactive = false;
-
 		   maxJumpHeight = 4;
+
+		   buttoninactive = false;
 		}
-		
-
-
 
 		
+		
+			
 	}
 
 
@@ -413,28 +478,38 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 	void OnHorizontalTriggerEnter(Collider2D collider) {
         
-    
+     Hongo hongo = collider.gameObject.GetComponent<Hongo>();
 
-	  if (collider.tag == "Hongo") {
-      Hongo hongo = collider.gameObject.GetComponent<Hongo>();
+	 Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
+
+	  if (collider.tag == "Hongo" && playerStates.estado == 0) {
+
 		    Debug.Log("Triggereando");
-      if(playerStates.estado != 1){ 
-
-		playerStates.Actualizarestado(1);
-		playerStates.Activarsuscripcion();
-	  }
-     
-     //collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
-	
-	       
+        
 			
-          hongo.Destroy();
+		playerStates.Actualizarestado(1);
+	
+     //collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+	 hongo.Destroy();
+	
 		
-	  }
+			playerStates.Activarsuscripcion();
+		}else if(collider.tag == "Hongo"){
+
+			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+
+			hongo.Destroy();
+			
+		}
 
 		if(collider.tag == "Final"){
-           
-		   StartCoroutine(ganarnivel());
+
+
+			
+			 final = true;    
+
+			collider.SendMessage("Bajarbandera",SendMessageOptions.DontRequireReceiver);      
+		  
 
 	
 
@@ -442,20 +517,23 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 
 		if(collider.tag =="Enemigo"){
-        
-		Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
-		playerStates.Activarsuscripcion();
-		 if(collider.gameObject.name == "Goomba"){
 
-		if (boxCollider.bounds.min.y > collider.bounds.max.y ) {
+		
+        playerStates.Activarsuscripcion();
+		 if( colisionenemigo._tipoEnemigos == Colisionenemigo.tipoenemigos.Goomba){
 
-				//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
-
+		
+                if(boxCollider.bounds.min.y > collider.bounds.max.y){
+			   
+			   
+               
 				colisionenemigo.Destroy();
-                 
+
+				Bounce();
+
 				
-               Bounce();
-			}
+				
+				}
 
 		 }
            
@@ -471,7 +549,7 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 		 }else if(boxCollider.bounds.min.y < collider.bounds.max.y ){
            if(lanzarcaparazon != true){
 			 Death();
-
+             
 		   }
 		 }
 
@@ -487,48 +565,65 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 
 		void OnVerticalTriggerEnter(Collider2D collider){
+			     Hongo hongo = collider.gameObject.GetComponent<Hongo>();
 
-			Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
+	   Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
+	    
+		
              
 			 Debug.Log("Triggereando");
-			 if (collider.tag == "Hongo") {
-             
-			 Hongo hongo = collider.gameObject.GetComponent<Hongo>();
-			if(playerStates.estado != 1){ 
-		    playerStates.Actualizarestado(1);
-			playerStates.Activarsuscripcion();
-			}
+			 if (collider.tag == "Hongo" && playerStates.estado == 0) {
 
-			
-	
+           
+		    playerStates.Actualizarestado(1);
+		
+		
+	  
 
 			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
-             
+			hongo.Destroy();
+
+			playerStates.Activarsuscripcion();
+
+		}else if(collider.tag =="Hongo"){
             hongo.Destroy();
-			
+
 			
 
 		}
 
 		if(collider.tag == "Final"){
-           
-		   StartCoroutine(ganarnivel());
+
+			final = true;
+
 
 		}
 
 
 		if(collider.tag =="Enemigo"){
 
-		
-        	if(collider.gameObject.name == "Goomba"){
+			
+			
+         
+        	if(colisionenemigo._tipoEnemigos == Colisionenemigo.tipoenemigos.Goomba ){
 
-				colisionenemigo.Destroy();
-	
+	       
+	 if(boxCollider.bounds.min.y > collider.bounds.max.y){
 		//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
 
-			}
+		
 
-	         Bounce();
+		colisionenemigo.Destroy();
+		  Debug.Log("Goombeando");
+
+		
+		   
+	 }
+		       
+
+			}
+                Bounce();
+	
 
 		}
 
@@ -566,6 +661,7 @@ void checkg(){
 	}
 }
 
+
 	void OnVerticalCollisionEnter(Collider2D collider){				  
 
 			
@@ -583,37 +679,21 @@ void checkg(){
 				 }
 
 
+				 	if(collider.gameObject.name == "BloqueBandera"){
+
+             choquefinal = true;
+			}
+
+		
+
+
 		}
 
-	
 
 
-public IEnumerator ganarnivel(){
 
-final = true;
-
-
-velocity.y = -3f;
-anim.SetBool("BajarBandera",true);
-
-yield return new WaitForSeconds (1.5f);
-anim.SetBool("BajarBandera",false);
-
-controller.collisionMask = LayerMask.GetMask("Ground");
-
-final = false;
-
-
-velocity.x = 8f;
-
-
-yield return new WaitForSeconds (1f);
 
 
 
 
 }
-
-
-
-	}

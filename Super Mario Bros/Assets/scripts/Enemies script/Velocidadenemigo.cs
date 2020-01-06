@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Velocidadenemigo : MonoBehaviour
-{
+
+public class Velocidadenemigo : MonoBehaviour 
     
+{
+
      public	Vector2 velocity,acceleration;
 
      public Vector2 input;
@@ -63,5 +65,6 @@ public class Velocidadenemigo : MonoBehaviour
 		
 		acceleration += force;
 	}
+
 
 }

@@ -2,57 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Goombamovement : MonoBehaviour
+public class Goombamovement : Enemigo
 {
-
-
-
-    float gravity = -20;
-
-    Vector3 velocity,m;
-
-    Controller2D controller;
-
-    Animator animator;
-
-  public float speed = 1f;
-
-
-
-  GameObject Player;
-
-
-
-BoxCollider2D boxCollider;
-
-PlayerStates PlayerState;
-
     // Start is called before the first frame update
+
+
+
+   
     void Start()
     {
-        controller = GetComponent<Controller2D>();
-
-        animator = GetComponent<Animator>();
-     
-     boxCollider = GetComponent<BoxCollider2D>();
-     
-
-               Player = GameObject.FindGameObjectWithTag("Player");
-
-        
-        PlayerState = Player.GetComponent<PlayerStates>();
-
- 
+    Init();
+         controller.horizontalcolision +=OnHorizontalCollisionEnter;
+         controller.verticalcolision +=OnVerticalCollisionEnter;
+   
     }
 
     // Update is called once per frame
     void Update()
     {
-       controller.collisionMask &= ~(1 << 9);
-      velocity.x = speed;
-      velocity.y += gravity*Time.deltaTime;
 
-      controller.Move(velocity*Time.deltaTime,m);  
+     
+      // controller.collisionMask &= ~(1 << 9);
+      //velocity.x = speed;
+      //velocity.y += gravity*Time.deltaTime;
+
+  //input = Vector3.zero;
+   
+      //controller.Move(velocity*Time.deltaTime,input);  
       
   
 //  Colisionmario();
@@ -141,43 +117,54 @@ PlayerStates PlayerState;
 
 
 //}
-
-
-
     void Destroy(){
 
 
+   Manager._manager.Desuscripcion();
+
 	StartCoroutine (Muerte ());
 
-    }
+    
 
+    }
 
   void OnVerticalCollisionEnter(Collider2D collider) {
 
       	if (collider.tag == "Player") {
 
-			
-			Destroy();
+            
+
+         
+			   Destroy();
+         Debug.Log("Destruido");
 		}
 
    
 	}
 
-	void OnHorizontalCollisionEnter(Collider2D collider) {
+
+
+	public void OnHorizontalCollisionEnter(Collider2D collider) {
+
+          
 
     	if (collider.tag == "Player") {
 
-             if(PlayerState.estado == 0){
+             if(playerStates.estado == 0){
 
 
             collider.SendMessage("Death");
+
+           controller.collisionMask &= ~(1 << 11);
             }
 
-           if(PlayerState.estado == 1){
+           if(playerStates.estado == 1){
              
-          PlayerState.Actualizarestado(0);
+          playerStates.Actualizarestado(0);
 
           collider.SendMessage ("TakeDamage", SendMessageOptions.DontRequireReceiver);
+
+          StartCoroutine(inmune());
 
           
 
@@ -191,17 +178,28 @@ PlayerStates PlayerState;
  
 
 		if (collider.tag == "Obstaculo" || collider.tag == "Ground" ){
-			speed *= -1f;
+			velocidadenemigo.speed *= -1f;
+
+    
 
         }
 	}
 
 
+
+ public IEnumerator inmune(){
+     controller.collisionMask &= ~(1 << 11);
+  yield return new WaitForSeconds(1.2f);
+
+  controller.collisionMask |= (1 << 11);
+
+ }
+
     	public IEnumerator Muerte()
 	{
 
-	velocity = Vector2.zero;
-		animator.SetBool("Muerte", true);
+	velocidadenemigo.velocity = Vector2.zero;
+		anim.SetBool("Muerte", true);
 	
 	
 		yield return new WaitForSeconds(0.08f);

@@ -21,6 +21,12 @@ public class Colisionenemigo : Enemigo
 
     public  bool  girando,daño,capes = false,contadormuerte;
 
+   public float vars;
+   
+   
+
+  
+
     // Start is called before the first frame update
     void Start()
     {
@@ -37,94 +43,109 @@ public class Colisionenemigo : Enemigo
     void Update()
     {
       controller.collisionMask &= ~(1 << 12);
+
+      Stomp();
+       
+
+  
        if (_tipoEnemigos.Equals(tipoenemigos.Koopa)){ 
-      Actgiro();
+     // Actgiro();
 
       Contador(capes); 
+
+      
 
        }
     }
 
-     void Actgiro(){
+          
 
-  BoxCollider2D pcollider = Player.GetComponent<BoxCollider2D>();
-
-   Bounds koopabounds = boxCollider.bounds;
+    void Stomp(){
 
 
-   Bounds Playerbounds = pcollider.bounds;
+      Collider2D[] hits = Physics2D.OverlapBoxAll(transform.position, boxCollider.size, 0);
 
-      if(koopabounds.Intersects(Playerbounds)){
+        foreach (Collider2D hit in hits)
+        {         
+              if(hit == boxCollider)
+              continue;
 
-   
+              if(hit.tag == "Enemigo" && !capes){
+                   
+                   velocidadenemigo.speed *= -1f;
 
-        if(Playerbounds.min.y > boxCollider.transform.position.y){
+              }
+              if(hit.tag == "Player" && _tipoEnemigos.Equals(tipoenemigos.Koopa))  {
 
-            capes = true;
+                
+                  if( hit.transform.position.y >= boxCollider.bounds.max.y && !capes){
 
-            girando = false;
+                     capes = true;
 
-             anim.SetBool("girar",false);
+                      girando = false;
 
-            velocidadenemigo.speed = 0;
+                     anim.SetBool("girar",false);
 
-            Debug.Log("Asd");
-           
+                    velocidadenemigo.speed = 0;
+                    Debug.Log("Playereando");
+                    
+                    
 
-        }
+                  }
 
-   
-        if(capes){
-        	
-         if(koopabounds.min.x > pcollider.transform.position.x && koopabounds.max.y > Playerbounds.min.y){
+                 else if(capes){
+                        vars = Random.Range(0,2)*2-1;
 
-           girando = true;
+                         if(hit.transform.position.y >= boxCollider.bounds.max.y){
+
+                          girando = true;
+
+                           velocidadenemigo.speed = vars*16f;
+
+                          anim.SetBool("girar",true);
+
+                         }
+
+                     
+                       
+                  else if(boxCollider.bounds.min.x > hit.transform.position.x && boxCollider.bounds.max.y > hit.bounds.min.y ){
+                            girando = true;
        
            
 
          
 
-           velocidadenemigo.speed = 16f;
+                         velocidadenemigo.speed = 16;
 
-           anim.SetBool("girar",true);
-
-          
-
-         }else if(koopabounds.max.x < pcollider.transform.position.x && koopabounds.max.y > Playerbounds.min.y){
-
-           girando = true;
+                          anim.SetBool("girar",true);
+                           Debug.Log("CAPES");
+                     }else if(boxCollider.bounds.min.x < hit.transform.position.x && boxCollider.bounds.max.y > hit.bounds.min.y){
+                             girando = true;
 
            
 
 
 
-           velocidadenemigo.speed = -16f;
+                         velocidadenemigo.speed = -16f;
 
-           anim.SetBool("girar",true);
-           
-         
-
-
-         }
-
-         }
-
-
-       }
-          
-           
-
-     
+                          anim.SetBool("girar",true);
+                          Debug.Log("SEPAC");
+                     }
 
 
 
-      }
+                 }
+              }
+        }
+    }
+
+ 
 
 
        public void Destroy(){
 
-
-   Manager._manager.Desuscripcion();
+    Manager._manager.Desuscripcion();
+  
 
  if (_tipoEnemigos.Equals(tipoenemigos.Goomba)){
 
@@ -133,7 +154,7 @@ public class Colisionenemigo : Enemigo
       if(colision!=null && colision == this.colision){
 
 	
-
+    
 
      controller.horizontalcolision -=OnHorizontalCollisionEnter;
 
@@ -146,6 +167,8 @@ public class Colisionenemigo : Enemigo
 
     	void OnHorizontalCollisionEnter(Collider2D collider) {
 
+       
+
       if(colision!=null && colision == this.colision)
            
            if (collider.tag == "Player") {
@@ -156,14 +179,18 @@ public class Colisionenemigo : Enemigo
              if(playerStates.estado == 0){
 
               
-            collider.SendMessage ("Death", SendMessageOptions.DontRequireReceiver);
+            //collider.SendMessage ("Death", SendMessageOptions.DontRequireReceiver);
+
+            player.Death();
             }
 
            if(playerStates.estado == 1){
              
           playerStates.Actualizarestado(0);
 
-          collider.SendMessage ("TakeDamage", SendMessageOptions.DontRequireReceiver);
+          //collider.SendMessage ("TakeDamage", SendMessageOptions.DontRequireReceiver);
+
+          player.TakeDamage();
 
           StartCoroutine(inmune());
 
@@ -255,7 +282,7 @@ public class Colisionenemigo : Enemigo
 
   if(contador == 9  || contador >= 9){
       capes = false;
-       velocidadenemigo.speed = 3f;
+       velocidadenemigo.speed = 4f;
 
        
 

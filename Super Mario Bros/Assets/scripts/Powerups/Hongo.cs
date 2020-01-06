@@ -35,13 +35,20 @@ public class Hongo : MonoBehaviour
 
 float gravity = -20;
 
-private Hongo hongo;
+
 Controller2D controller;
+
+  PlayerStates playerStates;
+
+  GameObject Player;
     // Start is called before the first frame update
+
+    private Hongo hongo;
     void Start()
     {
-       
-       hongo = this;
+      hongo = this;
+        Player = GameObject.FindGameObjectWithTag("Player");
+      playerStates = Player.GetComponent<PlayerStates>();
 
 
             boxCollider = GetComponent<BoxCollider2D>();
@@ -51,10 +58,8 @@ Controller2D controller;
 
  prevlayer = LayerMask.GetMask("Ground","Obstaculo","Player","Premiobloque") ;
 
-         controller.horizontalcolision +=OnHorizontalCollisionEnter;
+          controller.horizontalcolision +=OnHorizontalCollisionEnter;
 		controller.verticalcolision +=OnVerticalCollisionEnter;
-
-      Manager._manager.Destruirpremio += Destroy;
   
  
     }
@@ -165,14 +170,12 @@ speed *=-1;
 public void Destroy(){
 
 
- 
+ Destroy(this.gameObject);
 
-  if(hongo !=null && hongo == this.hongo){
-    Destroy(this.gameObject);
+ if(hongo !=null && hongo == this.hongo){
+
  controller.horizontalcolision -=OnHorizontalCollisionEnter;
 		controller.verticalcolision -=OnVerticalCollisionEnter;
-
-       Manager._manager.Destruirpremio -= Destroy;
 
  }
 
@@ -215,8 +218,10 @@ velocity.x = speed;
 	void OnVerticalCollisionEnter(Collider2D collider) {
 
       	if (collider.tag == "Player") {
-
+          
+          
 			collider.gameObject.SendMessage ("Actualizarestado",1);
+          
 			Destroy();
 		}
 
@@ -229,8 +234,10 @@ velocity.x = speed;
 	void OnHorizontalCollisionEnter(Collider2D collider) {
 
     	if (collider.tag == "Player") {
-
+         
+        if(playerStates.estado !=1){
 			collider.gameObject.SendMessage ("Actualizarestado",1);
+        }
 			Destroy();
 		}
 

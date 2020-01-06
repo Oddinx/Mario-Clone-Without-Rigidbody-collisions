@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Enemigo : MonoBehaviour
 {
-     protected Controller2D controller;
+    
+    protected Controller2D controller;
 
      protected  PlayerStates playerStates;
 
@@ -20,7 +21,7 @@ public class Enemigo : MonoBehaviour
 
   protected Velocidadenemigo velocidadenemigo;
 
-
+  protected Pausaenemigo pausar;
 
 protected Enemigo enemigo;
           // Start is called before the first frame update
@@ -38,10 +39,11 @@ protected Enemigo enemigo;
 
         velocidadenemigo = GetComponent<Velocidadenemigo>();
 
-      
+        pausar = GetComponent<Pausaenemigo>();
 
      
     }
+
 
 
 }

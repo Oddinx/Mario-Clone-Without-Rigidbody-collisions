@@ -1,12 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
+
 public class Manager : MonoBehaviour
 {
-    // Start is called before the first frame update
 
-      public static Manager _manager;
+    public static Manager _manager;
 
     Pausaenemigo _penemigo;
 
@@ -14,7 +14,31 @@ public class Manager : MonoBehaviour
  
     private AudioSource musiclevel;
 
-      public event Action pausa;
+    // Start is called before the first frame update
+    private void Awake() 
+    {
+        _manager = this;
+          
+          
+
+    }
+  
+  void Start(){
+
+
+         enemigo = GameObject.FindGameObjectWithTag("Enemigo");
+      _penemigo = enemigo.GetComponent<Pausaenemigo>();
+
+      musiclevel = GetComponent<AudioSource>();
+
+      musiclevel.Play();
+  }
+    
+   
+   
+    // Update is called once per frame
+
+    public event Action pausa;
 
     public event Action reanudar;
 
@@ -22,12 +46,7 @@ public class Manager : MonoBehaviour
 
     public event Action desuscribir;
 
-    public event Action Destruirpremio;
-    void Awake(){
-
-        _manager = this;
-    }
-       public void Suscripcion(){
+    public void Suscripcion(){
 
       if( suscribir!= null){
 
@@ -35,17 +54,7 @@ public class Manager : MonoBehaviour
       }
 
     }
-     
 
-     public void Destruccionpremio(){
-
-       if(Destruirpremio != null){
-
-         Destruirpremio();
-       }
-
-
-     }
  
        public void Desuscripcion(){
 
@@ -80,4 +89,6 @@ public class Manager : MonoBehaviour
              reanudar();
          } 
       }
+     
+
 }

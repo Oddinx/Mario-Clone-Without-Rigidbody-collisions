@@ -10,12 +10,11 @@ public class PlayerStates : Personaje
 
  public int estado; // 0 pequeño // 1 grande // fuego
 
-    private SpriteRenderer spriteRenderer;
-    private Animator animator;
+
 
 bool cambioEstado;
 
-float transtimer;
+public float transtimer;
 
 
 
@@ -28,14 +27,9 @@ float transtimer;
   void Start() {
         
 
-      
- Init();
+       Init();
 
-        
-
-
-}
-
+    }
 
 
  
@@ -44,48 +38,8 @@ float transtimer;
     // Update is called once per frame
     void Update()
     {
-
-
-            //boxcast
-
-          
-
-
-
-//boxcast abajo
-
-
-    
-
-  
-
-    
-//finboxcastabajo
-
-
-//boxcastderecha
-
-    
-
-//finboxcast derecha
-
-//Boxcast izquierda
-
-  
-
-//Finboxcastizquierda
-
-//fin boxcast
-
-
-
-
-
-//fin rayo der
-
-//RayoArriba
-
-
+     
+           
         
        switch (estado){
             
@@ -97,15 +51,16 @@ float transtimer;
 
          anim.SetLayerWeight (1, 0);
 
+         //Activarsuscripcion();
+
          break;
 
          case 1:
    
-             //animator.runtimeAnimatorController = Marios[1];
-
+         
+       
          Crecer();
-
-        
+          
 
          break;
        
@@ -117,7 +72,8 @@ float transtimer;
          break;
 
        } 
-
+      
+   
 
     }
 
@@ -139,21 +95,29 @@ float transtimer;
  transtimer += Time.fixedDeltaTime;
 
 
-Manager._manager.Pausarenemigo();
-    
 
-     if(transtimer > 0.4){
+Manager._manager.Pausarenemigo();
+   
+      
+      if(transtimer > 0.4f){
 
          anim.SetBool("Crecer",false);
 
-          Manager._manager.Reanudarenemigo();
-     }
+         Manager._manager.Reanudarenemigo();
 
+
+         
+      
+        
+
+        
+    
      anim.SetLayerWeight (1, 1);
+
+  }
 
 
  }
-
 
 public void Activarsuscripcion(){
 
@@ -162,7 +126,7 @@ public void Activarsuscripcion(){
 
   transtimer = 0;
 }
- 
+
 
 
 

@@ -8,26 +8,31 @@ public class Controller2D : RaycastController {
 	
 	public CollisionInfo collisions;
 	Vector2 playerInput;
-
-	public int collisionMask { get; set; }
+    
 	
+	public int collisionMask { get; set; }
 
-		 public event Action <Collider2D> horizontalcolision;
+     //public LayerMask collisionMask;
+	 
+	 public event Action <Collider2D> horizontalcolision;
 
 	 public event Action <Collider2D> verticalcolision;
 
      public event Action <Collider2D> horizontalTrigger;
 
 	 public event Action <Collider2D> verticallTrigger;
-	public override void Start() {
+
+public override void Start() {
 		base.Start ();
+
+		
 		collisions.faceDir = 1;
   
 
 
-
+//pon layer normal
   for (int i = 0; i < 32; i++) {
-			collisionMask |= (1 << i);
+		collisionMask |= (1 << i);
 		
 		}
 
@@ -57,7 +62,7 @@ public class Controller2D : RaycastController {
 		if (velocity.y != 0) {
 			VerticalCollisions (ref velocity);
 		}
-
+        
 		transform.Translate (velocity);
 
 		if (standingOnPlatform) {
@@ -89,27 +94,23 @@ public class Controller2D : RaycastController {
               	if(hit.collider){ 
 
                 if(hit.collider.isTrigger){
-
-					if(horizontalTrigger !=null)
+                       
+				    if(horizontalTrigger !=null){
                         
 						horizontalTrigger(hit.collider);
 
-					
-
+					}
 					//SendMessage("OnHorizontalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
-
-					if(hit.collider.tag != this.collider.tag){
+                   if(hit.collider.tag != this.collider.tag){
 
 					continue;
 					
 					}
 				} else {
                      
-                       if(horizontalcolision !=null)
-                          horizontalcolision(hit.collider);
-				   
-				   
-
+                   if(horizontalcolision !=null){
+                   horizontalcolision(hit.collider);
+				   }
                   //SendMessage ("OnHorizontalCollisionEnter", hit.collider, SendMessageOptions.DontRequireReceiver);
 				}
 
@@ -159,6 +160,7 @@ public class Controller2D : RaycastController {
 		float directionY = Mathf.Sign (velocity.y);
 		float rayLength = Mathf.Abs (velocity.y) + skinWidth;
 
+		
 		for (int i = 0; i < verticalRayCount; i ++) {
 
 			Vector2 rayOrigin = (directionY == -1)?raycastOrigins.bottomLeft:raycastOrigins.topLeft;
@@ -166,36 +168,43 @@ public class Controller2D : RaycastController {
 			RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY, rayLength, collisionMask);
 
 			Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength,Color.red);
+			
 
 
-               	if(hit.collider){
+               
+
+
+			if (hit) {
+
+					if(hit.collider){
 
                 if(hit.collider.isTrigger){
 
-					//SendMessage("OnVerticalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
-
-					 if(verticallTrigger != null)
+                    if(verticallTrigger != null){
 
 						verticallTrigger(hit.collider);
+					}
 					
-
-					if(hit.collider.tag != this.collider.tag && hit.collider.tag !="Enemigo"){
+					//SendMessage("OnVerticalTriggerEnter",hit.collider,SendMessageOptions.DontRequireReceiver);
+                    
+				if(hit.collider.tag != this.collider.tag && hit.collider.tag !="Enemigo"){
                      continue;
-				  }
-				} else {
-                      if(verticalcolision!=null)
-                        verticalcolision(hit.collider);
+				}	
+				
 
-				   
-                   
+					
+				} else {
+                     
+                   if(verticalcolision!=null){
+                     verticalcolision(hit.collider);
+
+				   }
 
                   //SendMessage ("OnVerticalCollisionEnter", hit.collider, SendMessageOptions.DontRequireReceiver);
 				}
 
 			}
-
-
-			if (hit) {
+				
 				if (hit.collider.tag == "Through") {
 					if (directionY == 1 || hit.distance == 0) {
 						continue;
@@ -223,6 +232,8 @@ public class Controller2D : RaycastController {
 				collisions.below = directionY == -1;
 				collisions.above = directionY == 1;
 			}
+
+			
 		}
 
 		if (collisions.climbingSlope) {
@@ -277,8 +288,6 @@ public class Controller2D : RaycastController {
 			}
 		}
 	}
-
-
 
 
 

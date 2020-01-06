@@ -8,21 +8,31 @@ public class Bandera : MonoBehaviour
 
     Vector2  velocity;
 
-    float speed = -3f;
+    float speed = -4f;
+
+  
 
 
+ void Update() {
+
+          transform.Translate(velocity * Time.deltaTime);
+
+   
 
 
-
+   
+}
 
 
 
 
    void Bajarbandera(){
 
-      transform.Translate(velocity * Time.deltaTime);
+
 
 StartCoroutine(movb());
+
+
 
 
    }
@@ -30,9 +40,11 @@ StartCoroutine(movb());
 
 
 IEnumerator movb(){
+
+
 velocity.y = speed;
 
-yield return new WaitForSeconds (1f);
+yield return new WaitForSeconds (2f);
 
 speed =0;
 

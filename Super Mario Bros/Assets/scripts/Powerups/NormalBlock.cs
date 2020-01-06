@@ -7,12 +7,16 @@ public class NormalBlock : MonoBehaviour
    public int rebote;
 
    Vector2 position;
+
+   private ParticleSystem particula;
  
     // Start is called before the first frame update
     void Start()
     {
       
         position = new Vector2(transform.position.x,transform.position.y);
+
+        particula = Resources.Load<ParticleSystem>("Particulas/Explosionbloque");
     }
 
     // Update is called once per frame
@@ -58,6 +62,7 @@ void movimiento(){
 
 void Destroy(){
 
+   Instantiate(particula,transform.position,transform.rotation);
 
     Destroy(gameObject);
 }

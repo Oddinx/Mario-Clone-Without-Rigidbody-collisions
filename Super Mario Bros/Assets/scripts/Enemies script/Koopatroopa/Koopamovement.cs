@@ -2,84 +2,66 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Koopamovement : MonoBehaviour
+public class Koopamovement :Enemigo
 {
-      public float speed = 1f;
-    float gravity = -20;
-
-    Vector2 velocity,m,acceleration;
-
-    Controller2D controller;
-
-    Animator animator;
 
 
-
-     PlayerStates PlayerState;
-
-     BoxCollider2D boxCollider;
-
-     Player player;
-
-     GameObject Player;
-
-    public float mass = 1f,contador,contadorgiro;
+    public float contador,contadorgiro;
 
     public  bool  girando,daño,capes = false;
-
-    
 
      
     // Start is called before the first frame update
     void Start()
     {
-          controller = GetComponent<Controller2D>();
+          Init();
 
-        animator = GetComponent<Animator>();
-
-        boxCollider = GetComponent <BoxCollider2D>();
-
-       Player = GameObject.FindGameObjectWithTag("Player");
-
-       player = Player.GetComponent<Player>();
-
-        
-        PlayerState = Player.GetComponent<PlayerStates>();
-        
+       
+       
     }
 
     // Update is called once per frame
     void Update()
-    {   controller.collisionMask &= ~(1 << 9);
-        velocity.x = speed;
-      velocity.y += gravity*Time.deltaTime;
+    {   
+      // controller.collisionMask &= ~(1 << 9);
+      //  velocity.x = speed;
+      //velocity.y += gravity*Time.deltaTime;
 
-      controller.Move(velocity*Time.deltaTime,m); 
+      //controller.Move(velocity*Time.deltaTime,input); 
 
       Actgiro();
 
       Contador(capes);   
-
-       
-
+      
+      Stomp();
 
       
-            if(speed > 0.1){
+           // if(speed > 0.1){
 
-	transform.localScale = new Vector3(1f,1f,1f);
+	//transform.localScale = new Vector3(1f,1f,1f);
 
  
 
-       }
+    //   }
 
-   if(speed < -0.1f){
-	transform.localScale = new Vector3(-1f,1f,1f);
+   //if(speed < -0.1f){
+	//transform.localScale = new Vector3(-1f,1f,1f);
    
    
-     }
+    // }
 
         
     }
+
+
+
+  void Stomp(){
+
+      
+       
+
+  }
+
 
 
   void Actgiro(){
@@ -101,9 +83,9 @@ public class Koopamovement : MonoBehaviour
 
             girando = false;
 
-             animator.SetBool("girar",false);
+             anim.SetBool("girar",false);
 
-             speed = 0;
+            velocidadenemigo.speed = 0;
            
 
         }
@@ -111,31 +93,31 @@ public class Koopamovement : MonoBehaviour
    
         if(capes){
         	
-         if(koopabounds.min.x > pcollider.transform.position.x){
+         if(koopabounds.min.x > pcollider.transform.position.x && koopabounds.max.y > Playerbounds.min.y){
 
            girando = true;
        
            
 
-           ApplyForce (Vector2.right * 6f);
+         
 
-           speed = 16f;
+           velocidadenemigo.speed = 16f;
 
-           animator.SetBool("girar",true);
+           anim.SetBool("girar",true);
 
           
 
-         }else if(koopabounds.max.x < pcollider.transform.position.x){
+         }else if(koopabounds.max.x < pcollider.transform.position.x && koopabounds.max.y > Playerbounds.min.y){
 
            girando = true;
 
            
 
-             //ApplyForce (Vector2.left * 6f);
 
-           speed = -16f;
 
-           animator.SetBool("girar",true);
+           velocidadenemigo.speed = -16f;
+
+           anim.SetBool("girar",true);
            
          
 
@@ -160,14 +142,6 @@ public class Koopamovement : MonoBehaviour
 
 
 
-  public void ApplyForce(Vector2 force) {
-
-		if(mass != 0f)
-			force /= mass;
-		
-		acceleration += force;
-	}
-
     	void OnHorizontalCollisionEnter(Collider2D collider) {
 
     
@@ -177,15 +151,15 @@ public class Koopamovement : MonoBehaviour
             if(capes != true){
 
 
-             if(PlayerState.estado == 0){
+             if(playerStates.estado == 0){
 
 
             collider.SendMessage ("Death", SendMessageOptions.DontRequireReceiver);
             }
 
-           if(PlayerState.estado == 1){
+           if(playerStates.estado == 1){
              
-          PlayerState.Actualizarestado(0);
+          playerStates.Actualizarestado(0);
 
          }
           
@@ -196,7 +170,7 @@ public class Koopamovement : MonoBehaviour
  
 
 		if (collider.tag == "Obstaculo" || collider.tag == "Ground" ){
-			speed *= -1f;
+			   velocidadenemigo.speed *= -1f;
 
 
         }
@@ -210,10 +184,12 @@ public class Koopamovement : MonoBehaviour
 
  void OnVerticalCollisionEnter(Collider2D collider) {
 
+      
+
       	if (collider.tag == "Player") {
 
          
-			
+			Debug.Log("Tortuga");
 			
 
 		}
@@ -231,6 +207,8 @@ void Contador(bool cont){
 
     contadorgiro += Time.deltaTime;
 
+    
+
     if(contadorgiro > 0.1){
 
       capes = false;
@@ -247,11 +225,12 @@ void Contador(bool cont){
   	player.Activarlanzamiento();
 
  if( contador < 6  && girando!= true){
-     speed = 0;
+     velocidadenemigo.speed = 0;
+  
+    anim.ResetTrigger("normal");
 
-
-   animator.SetTrigger("escondido");
-  animator.SetBool("girar",false);
+   anim.SetTrigger("escondido");
+  anim.SetBool("girar",false);
 
   }
 
@@ -261,7 +240,7 @@ void Contador(bool cont){
  
   }else{
 
-    animator.ResetTrigger("escondido");
+    anim.ResetTrigger("escondido");
 
     contador = 0;
 
@@ -273,17 +252,17 @@ void Contador(bool cont){
 
   if(contador == 9  || contador >= 9){
       capes = false;
-       speed = 3f;
+       velocidadenemigo.speed = 3f;
 
        
 
-       animator.SetTrigger("normal");
+       anim.SetTrigger("normal");
 
   }else if( contador <= 7  && contador > 6){
 
     
 
-     animator.SetTrigger("saliendo");
+     anim.SetTrigger("saliendo");
 
      
 
@@ -295,29 +274,5 @@ void Contador(bool cont){
 
 
   
-     	public IEnumerator Escondido()
-	{
-    animator.SetBool("girar",false);
-    girando = false;
-    capes = true;
-	speed =0;
-	
-    animator.SetTrigger("escondido");
 
-   if( girando != true){
-
-    yield return new WaitForSeconds(6f);
-   animator.SetTrigger("saliendo");
-   yield return new WaitForSeconds(0.5f);
-
-    capes = false;
-
-       speed =3f;
-
-        animator.SetTrigger("normal");
-   		
-	}
-
-
-  }
 }

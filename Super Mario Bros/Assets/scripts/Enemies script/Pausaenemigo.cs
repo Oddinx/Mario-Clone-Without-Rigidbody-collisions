@@ -1,16 +1,20 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Pausaenemigo : Enemigo
 {
-   public int id;
+
+  
+
+    public int id;
     
     public Pausaenemigo ps;
     // Start is called before the first frame update
     void Start()
     {
-        ps = GetComponent<Pausaenemigo>();
+        ps = this;
 
         Init();
  
@@ -65,7 +69,7 @@ public class Pausaenemigo : Enemigo
 
      public void Desuscribir(){
 
-         if(ps == this.ps){
+         if(id == this.id){
         Manager._manager.pausa-=OnPauseGame;
 
           Manager._manager.reanudar-=OnResumeGame;
@@ -94,5 +98,11 @@ public class Pausaenemigo : Enemigo
         
        
 	 }
+
+
+  
+
+    
+    	
 
 }
