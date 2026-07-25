@@ -58,6 +58,10 @@ public class Player : Personaje
 
 bool checkexit;
 
+	public float duckFrictionRunning = 16f;
+	public float duckFrictionLanding = 24f;
+	private bool justLandedDucking = false;
+	private float duckLandingTimer = 0f;
 	[HideInInspector] public bool isDucking = false;
 	private Vector2 originalColliderSize;
 	private Vector2 originalColliderOffset;
@@ -218,8 +222,10 @@ bool checkexit;
 		// SMB1 FrictionAdderHigh/Low ($0701/$0702) & Acceleration:
 		// Linear acceleration/deceleration feels natural and matches SMB1 unlike SmoothDamp
 		if(controller.collisions.below && Mathf.Abs(input.x) < 0.01f) {
-			float duckFriction = (Mathf.Abs(velocity.x) > 6f) ? 20f : 16f;
-			float currentFriction = isDucking ? duckFriction : GROUND_FRICTION;
+			float currentFriction = GROUND_FRICTION;
+			if (isDucking) {
+				currentFriction = justLandedDucking ? duckFrictionLanding : duckFrictionRunning;
+			}
 			velocity.x = Mathf.MoveTowards(velocity.x, 0f, currentFriction * Time.deltaTime);
 		} else {
 			velocity.x = Mathf.MoveTowards(velocity.x, targetVelocityX, accelRate * Time.deltaTime);
@@ -229,6 +235,25 @@ bool checkexit;
 		velocity.x = Mathf.Clamp(velocity.x, -currentMaxSpeed, currentMaxSpeed);
 
 		input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+	}
+
+	// Track landing state for ducking friction
+	if (grounded && !controller.collisions.below) {
+		// Left the ground
+		justLandedDucking = false;
+	} else if (!grounded && controller.collisions.below) {
+		// Just landed
+		if (isDucking) {
+			justLandedDucking = true;
+			duckLandingTimer = 0.5f; // Apply landing friction for half a second or until stopped
+		}
+	}
+
+	if (justLandedDucking) {
+		duckLandingTimer -= Time.deltaTime;
+		if (duckLandingTimer <= 0f || Mathf.Abs(velocity.x) < 0.1f) {
+			justLandedDucking = false;
+		}
 	}
 
 
