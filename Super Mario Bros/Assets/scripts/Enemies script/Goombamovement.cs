@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -177,11 +177,12 @@ public class Goombamovement : Enemigo
 
  
 
-		if (collider.tag == "Obstaculo" || collider.tag == "Ground" ){
-			velocidadenemigo.speed *= -1f;
-
-    
-
+		if (collider.tag == "Obstaculo" || collider.tag == "Ground" || collider.tag == "Enemigo") {
+			if (collider.bounds.center.x > boxCollider.bounds.center.x) {
+				velocidadenemigo.speed = -Mathf.Abs(velocidadenemigo.speed);
+			} else {
+				velocidadenemigo.speed = Mathf.Abs(velocidadenemigo.speed);
+			}
         }
 	}
 

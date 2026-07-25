@@ -1,27 +1,29 @@
-﻿
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using GlobalTypes;
+using UnityEngine.SceneManagement;
 [RequireComponent (typeof (Controller2D))]
 
 
 public class Player : Personaje
 	
 {
-	float accelerationTimeAirborne = .2f;
+	float accelerationTimeAirborne = .4f;
+	float accelerationTimeAirborneAgainst = .7f; // Resistance when pushing opposite direction in air
 	float accelerationTimeGrounded = .1f;
 	public float moveSpeed = 6;
 	float velocityXSmoothing;
 
-    public float timer = 0f,_blinkTimer,blinkTime = 0.1f,_blinkAmount,timerfinal;
-     public float rundecend = 0;
+    public float timerfinal;
+
      public bool buttoninactive;
 	   public KeyCode run; 
  public bool final,Intangible,grounded = true,lanzarcaparazon,choquefinal,bounce,muerto;
 
 
-
+bool checkexit;
 
 
 	void Start() {
@@ -41,38 +43,36 @@ public class Player : Personaje
 		controller.horizontalTrigger +=OnHorizontalTriggerEnter;
 
 		controller.verticallTrigger += OnVerticalTriggerEnter;
+
+        Manager._manager.muertemario += Death;
 	
 	}
 
 	void Update() {
 
-
+		// Si mario está muerto, no procesar ningún input ni movimiento
+		if(muerto) {
+			velocity.y += gravity * Time.deltaTime;
+			controller.Move(velocity * Time.deltaTime, Vector2.zero);
+			return;
+		}
  
-		
-
- controller.collisionMask &= ~(1 << 11);
-
-
-		
-   setIntangible(Intangible);
-		
-
-      velocity += acceleration;
-   
  
 	 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
 
-       // moveSpeed = DefineMoveSpeed();
+       moveSpeed = Definirvelocidad();
 		float targetVelocityX = input.x * moveSpeed;
 
-	velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below)?accelerationTimeGrounded:accelerationTimeAirborne);
-
-
-
-
-
-
+		// Aerial momentum: when pushing against current direction, apply more resistance
+		float smoothTime;
+		if(controller.collisions.below) {
+			smoothTime = accelerationTimeGrounded;
+		} else {
+			// If input opposes current horizontal velocity, use higher smoothing time
+			bool pushingAgainstVelocity = (input.x > 0.01f && velocity.x < -0.01f) || (input.x < -0.01f && velocity.x > 0.01f);
+			smoothTime = pushingAgainstVelocity ? accelerationTimeAirborneAgainst : accelerationTimeAirborne;
+		}
 
 	if( final){
 
@@ -99,6 +99,7 @@ public class Player : Personaje
             
 			if(timerfinal >=3){
 			 velocity.x = 0;
+			  SceneManager.LoadScene(0,LoadSceneMode.Single);
 
 			}else if(timerfinal >=2){
 			velocity.x = 6f;
@@ -112,7 +113,7 @@ public class Player : Personaje
 			
 	}else{
 
-		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below)?accelerationTimeGrounded:accelerationTimeAirborne);
+		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, smoothTime);
 
 		input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 	}
@@ -122,7 +123,11 @@ public class Player : Personaje
 //CHECHG Detecta si estamos tocando el suelo o si estamos saltando
 checkg();
 
+if(grounded){
+
 anim.SetFloat ("Speed",Mathf.Abs(velocity.x));
+
+}
 
 
 anim.SetBool("Grounded",grounded);
@@ -145,30 +150,41 @@ if(input.x < -0.1f){
 
 
 
-		if (Input.GetKeyDown (KeyCode.Space)) {
+
+
+	if (Input.GetKeyDown (KeyCode.Space)) {
         
 			
 		
 			if (controller.collisions.below ) {
 				velocity.y = maxJumpVelocity;
-
+				
 				
 			}
+
+			  
+		
+			
 		}
 		if (Input.GetKeyUp (KeyCode.Space) ) {
+			
 			if (velocity.y > minJumpVelocity) {
 				velocity.y = minJumpVelocity;
-
+                 
+				 
 				
 			}
+		
 		}
 
-	
 		velocity.y += gravity * Time.deltaTime;
+
+	
 		controller.Move (velocity * Time.deltaTime, input);
-
-
-
+           velocity += acceleration;
+       	   
+   
+         
 		if (controller.collisions.above || controller.collisions.below) {
 			velocity.y = 0;
 		}
@@ -178,9 +194,9 @@ if(input.x < -0.1f){
 
 
 //Funciones para correr
- DefineMoveSpeed();
 
 
+Jump();
 
 
      //boxcast
@@ -191,133 +207,80 @@ if(input.x < -0.1f){
 	 //finboxcast
 
  // Si hemos aplastado algun enemigo, Mario hara un pequeño salto ,cuando el contador sea mayor a 0.1 la fuerza aplicada para ese pequeño salto se desactivara y el contador también se desactivara	 
-  if(bounce){
 
-		   contadorapplyforce += Time.fixedDeltaTime;
-		if(contadorapplyforce >= 0.05){
-
-         acceleration = Vector3.zero;
-
-		 contadorapplyforce = 0;
-
-		 bounce = false;
-
-		}
-
-	  }
-
-
+BounceActivo();
 
 
 	}
   
 
+ public float Definirvelocidad(){
 
-void DefineMoveSpeed(){
+   	float speed = xSpeed;
+		if (Input.GetKey (KeyCode.Z)) {
 
- 
+			speed *= runningMultiplyer;
 
+			if (grounded)
+				_runningTimer += Time.fixedDeltaTime;
 
-    //Contador de tiempo de cuando el boton correr no esta presionado
-     if(buttoninactive == true){
- rundecend += Time.deltaTime;
+			_runningTimer = Mathf.Clamp (_runningTimer, 0f, 2f);
 
- if(rundecend > 1){
+			if (_runningTimer >= runTime)
+				speed *= runningMultiplyer * 0.625f;
+		} 
+		else if (Input.GetKeyUp (KeyCode.Z)) {
 
+			_runningTimer = 0f;
+		}
 
-    buttoninactive = false;
-    rundecend = 0;
-    moveSpeed = 6.03f;
-
-	//maxJumpHeight = 4f;
-	gravitysetter(4f);
- } else if( rundecend > 0.5){
-
-         moveSpeed= 8f;
-		// maxJumpHeight = 6;
-
-		gravitysetter(5f);
-       }else if(rundecend > 0.1){
-
-         moveSpeed= 10f;
-
-		 //maxJumpHeight = 7f;
-
-		 gravitysetter(5.5f);
-       }
-
-      
-}
+		return speed;
 
 
 
-//Funciones para correr
-   if(Input.GetKey(run) && grounded){
-       timer += Time.deltaTime;
-       rundecend = 0;
-       buttoninactive = true;
-        if(timer > 2){
 
-         //moveSpeed = 15f;
+  }
 
-		gravitysetter(5.5f);
 
-        }else if(timer > 1){
-         moveSpeed = 10f;
+  void Jump(){
+
+        if(_runningTimer > 1){
+
+        gravitysetter(5.5f);
+		} else if(_runningTimer > 0.5f){
+         
 
 	     gravitysetter(5f);
            
-       } else if(timer >0.1f){
+       } else if(_runningTimer  >0.1f){
 
-         moveSpeed = 8f;
+         
 
 	     
 
 		 gravitysetter(4.5f);
 		
-       }else if(timer == 0){
+       }else if(_runningTimer  == 0){
 
-          moveSpeed = 6.03f;
+         gravitysetter(4f);
 
 		  
 	  }
        
-       
 
-     }else if(Input.GetKeyUp(run) && grounded){
- 
-      timer = 0;
-      buttoninactive = true;
+      
 
-     
+  }
 
-     }
-
-
-
-
-	
-}
 
 
 
 public void Death(){
 
-
-
-
-
-
 StartCoroutine(Muerte());
 
 
-
-
-
 		
-		
-		
-
 }
 
 
@@ -325,74 +288,55 @@ StartCoroutine(Muerte());
 
 	void Bounce(){
 
-		
+    
+    bounce = true;
 
-		bounce = true;
+		//ApplyForce(Vector2.up*4f);
 
-		ApplyForce(Vector2.up*2.5f);
 
 
 	}
 
-public void TakeDamage(){
 
+
+	void BounceActivo(){
+       
+	  if(bounce){
+		 velocity.y = Mathf.Max(velocity.y, 9f);
+		 bounce = false;
+	  }
+
+	}
+
+
+
+public void Corutina(){
+
+	StartCoroutine(invencible());
+
+}
+IEnumerator invencible(){
+	
 anim.SetTrigger("Daño");
-Intangible = true;
-
-
-    if(Intangible){
-
-
 boxCollider.isTrigger = true;
-controller.collisionMask &= ~(1 << 9);
-}
+controller.collisionMask &= ~(1 << 9);	
+
+  for(var i = 0; i < 10; i++){
+  _renderer.enabled = false;
+    yield return new WaitForSeconds (0.1f);
+     _renderer.enabled = true;
+       yield return new WaitForSeconds (0.1f);
+
+  }
 
 
-}
-void Blink(){
-_blinkTimer += Time.fixedDeltaTime;
+  boxCollider.isTrigger = false;
+	controller.collisionMask |= (1 << 9);
 
-if (_blinkTimer >= blinkTime) {
-			_renderer.enabled = !_renderer.enabled;
-			_blinkTimer = 0f;
-			_blinkAmount++;
-		}
-
-			if (_blinkAmount == 10)
-			blinkTime *= 0.8f;
-
-		else if (_blinkAmount == 20)
-			blinkTime *= 0.8f;
-
-		else if (_blinkAmount >= 40) {
-
-			_blinkAmount = 0;
-			_blinkTimer = 0f;
-
-			Intangible = false;
-			_renderer.enabled = true;
-		}
-
+	Debug.Log("Fin corutina");
 
 }
 
-
-
-void setIntangible(bool Intangible ){
-
-
-
-if(Intangible){
-
-Blink ();
-
-}else if(muerto!=true){
-
-		boxCollider.isTrigger = false;
-			controller.collisionMask |= (1 << 9);
-}
-
-}
 
 
 
@@ -417,47 +361,19 @@ controller.collisionMask = 0;
 yield return new WaitForSeconds(0.1f);
 transform.position = new Vector3(transform.position.x,2f,-2f);
 
+yield return new WaitForSeconds(2f);
 
-
- 
+  SceneManager.LoadScene(1,LoadSceneMode.Single);
 
 }
 
-	 //  private bool IsGrounded(){
 
-    //  Bounds bounds = boxCollider.bounds;
-    //  float extraHeightText = 1f;
-
-
-     //RaycastHit2D raycastHit= Physics2D.BoxCast(bounds.center,new Vector2(0.5f,1.0f),0f,Vector2.down,extraHeightText,groundLayerMask);
-      //Color rayColor; 
-
-      //if(raycastHit.collider != null){
-
-      // rayColor = Color.green;
-
-	
-		
-      //}else{
-
-      //  rayColor = Color.red;
-      //}
-     // Debug.DrawRay(bounds.center + new Vector3(bounds.extents.x,0),Vector2.down*(bounds.extents.y+extraHeightText),rayColor);
-     // Debug.DrawRay(bounds.center - new Vector3(bounds.extents.x,0),Vector2.down*(bounds.extents.y+extraHeightText),rayColor);
-     // Debug.DrawRay(bounds.center - new Vector3(bounds.extents.x,bounds.extents.y),Vector2.right*(bounds.extents.y),rayColor);
-    
-
-  
-      
-   //   return raycastHit.collider != null;
-
-   //}
 
 
 
 void OnHorizontalCollisionEnter(Collider2D collider) {
         
-        timer = 0;
+        _runningTimer = 0;
 
 		if(collider.tag == "Ground" || collider.tag == "Obstaculo" ){
            
@@ -466,6 +382,8 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 		   maxJumpHeight = 4;
 
 		   buttoninactive = false;
+
+		   
 		}
 
 		
@@ -482,19 +400,38 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 	 Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
 
-	  if (collider.tag == "Hongo" && playerStates.estado == 0) {
+
+	  if (collider.tag == "Hongo" && playerStates._estadosmario == estadosmario.Normal && hongo._tipopowerups == tipopowerups.Hongo) {
 
 		    Debug.Log("Triggereando");
         
-			
-		playerStates.Actualizarestado(1);
+		
+	  
+		playerStates.Actualizarestado(estadosmario.Grande);
 	
      //collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
 	 hongo.Destroy();
 	
 		
-			playerStates.Activarsuscripcion();
-		}else if(collider.tag == "Hongo"){
+		
+		}else if(collider.tag == "Hongo" && hongo._tipopowerups == tipopowerups.Hongo){
+
+			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+
+			hongo.Destroy();
+			
+		}
+
+		if(collider.tag == "Hongo" && playerStates._estadosmario != estadosmario.Fuego && hongo._tipopowerups == tipopowerups.Flor){
+
+          playerStates.Actualizarestado(estadosmario.Fuego);
+
+		   hongo.Destroy();
+	
+		
+		
+
+		}else if(collider.tag == "Hongo" && hongo._tipopowerups == tipopowerups.Flor){
 
 			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
 
@@ -519,8 +456,8 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 		if(collider.tag =="Enemigo"){
 
 		
-        playerStates.Activarsuscripcion();
-		 if( colisionenemigo._tipoEnemigos == Colisionenemigo.tipoenemigos.Goomba){
+        
+		if( colisionenemigo._tipoEnemigos == tipoenemigos.Goomba){
 
 		
                 if(boxCollider.bounds.min.y > collider.bounds.max.y){
@@ -529,7 +466,7 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
                
 				colisionenemigo.Destroy();
 
-				Bounce();
+			
 
 				
 				
@@ -537,13 +474,16 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		 }
            
-		   
 
-		 if(playerStates.estado == 1 && boxCollider.bounds.min.y < collider.bounds.max.y  ){
+
+
+		 if(playerStates._estadosmario != estadosmario.Normal  && boxCollider.bounds.min.y < collider.bounds.max.y  ){
 
            if(lanzarcaparazon != true){
-            TakeDamage ();
-			 playerStates.Actualizarestado(0);
+            //TakeDamage ();
+
+			StartCoroutine(invencible());
+			 playerStates.Actualizarestado(estadosmario.Normal);
 		   }
 			
 		 }else if(boxCollider.bounds.min.y < collider.bounds.max.y ){
@@ -569,21 +509,20 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 	   Colisionenemigo colisionenemigo = collider.GetComponent<Colisionenemigo>();
 	    
-		
+	
              
 			 Debug.Log("Triggereando");
-			 if (collider.tag == "Hongo" && playerStates.estado == 0) {
+			 if (collider.tag == "Hongo" && playerStates._estadosmario == estadosmario.Normal) {
 
            
-		    playerStates.Actualizarestado(1);
+		    playerStates.Actualizarestado(estadosmario.Grande);
 		
-		
+	
 	  
 
 			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
 			hongo.Destroy();
 
-			playerStates.Activarsuscripcion();
 
 		}else if(collider.tag =="Hongo"){
             hongo.Destroy();
@@ -592,20 +531,41 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		}
 
+			if(collider.tag == "Hongo" && playerStates._estadosmario != estadosmario.Fuego && hongo._tipopowerups == tipopowerups.Flor){
+
+          playerStates.Actualizarestado(estadosmario.Fuego);
+
+		   hongo.Destroy();
+	
+		
+			
+
+		}else if(collider.tag == "Hongo" && hongo._tipopowerups == tipopowerups.Flor){
+
+			//collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
+
+			hongo.Destroy();
+			
+		}
+
 		if(collider.tag == "Final"){
 
 			final = true;
 
 
 		}
+         
+		 if(collider.tag == "Limitey"){
 
+			 Death();
+		 }
 
 		if(collider.tag =="Enemigo"){
 
 			
 			
          
-        	if(colisionenemigo._tipoEnemigos == Colisionenemigo.tipoenemigos.Goomba ){
+        	if(colisionenemigo._tipoEnemigos == tipoenemigos.Goomba ){
 
 	       
 	 if(boxCollider.bounds.min.y > collider.bounds.max.y){
@@ -619,10 +579,11 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 		
 		   
 	 }
-		       
+		      
 
 			}
                 Bounce();
+			   
 	
 
 		}
@@ -651,40 +612,71 @@ public void DesactivarLanzamiento(){
 // Detecta si estamos tocando el suelo o si estamos saltando
 void checkg(){
 
+	  
+	
+		if(controller.collisions.below){
 
-	if(velocity.y == 0){
+			//grounded = true;
+           
+		   checkexit = false;
+		
+		}else{
 
-		grounded = true;
-	}else{
+			//grounded = false;
+			//bounce = false;
+			checkexit = true;
 
-		grounded = false;
-	}
+		   bounce = false;
+
+		   
+
+		}
+
+	if(checkexit){
+
+			grounded = false;
+		}
+	
+
+
 }
 
 
 	void OnVerticalCollisionEnter(Collider2D collider){				  
 
-			
+  Prizeblock prizeblock = collider.gameObject.GetComponent<Prizeblock>();
+	
+     if(collider.tag == "Block" && boxCollider.bounds.max.y < collider.bounds.min.y){
 
-			  if(collider.tag == "Block" && boxCollider.bounds.max.y < collider.bounds.min.y){
-
-					   if(playerStates.estado == 0){
+					  if(playerStates._estadosmario != estadosmario.Normal && prizeblock._tipobloque == tipobloque.Normal){
                          
-					 	collider.SendMessage ("movimiento", SendMessageOptions.DontRequireReceiver);
 
-					   }else{
-
-						   collider.SendMessage ("Destroy", SendMessageOptions.DontRequireReceiver);
-					   }
+                                prizeblock.Destroy();
 				 }
+
+				 if(prizeblock._tipobloque == tipobloque.Premio){
+
+					 prizeblock.Rebotar();
+				 }
+
+	 }
 
 
 				 	if(collider.gameObject.name == "BloqueBandera"){
 
              choquefinal = true;
 			}
+       
 
 		
+		  if(collider.tag == "Ground" || collider.tag == "Obstaculo" || collider.tag == "Block" || collider.tag == "Premio" && collider.bounds.max.y < boxCollider.bounds.min.y){
+
+
+           
+
+			 grounded = true;
+
+		  }
 
 
 		}

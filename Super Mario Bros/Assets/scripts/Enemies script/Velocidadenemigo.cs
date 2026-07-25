@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,6 +18,9 @@ public class Velocidadenemigo : MonoBehaviour
        Controller2D controller;
 
        public float mass = 1f,contadorapplyforce;
+    private Transform playerTransform;
+    public bool isActivated = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -26,19 +29,32 @@ public class Velocidadenemigo : MonoBehaviour
       
       gravity = -50;
       
-        
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null) playerTransform = p.transform;
     }
 
     // Update is called once per frame
     void Update()
     {   
+      if (!isActivated) {
+          if (playerTransform != null && Mathf.Abs(playerTransform.position.x - transform.position.x) < 15f) {
+              isActivated = true;
+          }
+      }
+
       controller.collisionMask &= ~(1 << 9);
-      velocity.x = speed;
+      
+      if (isActivated) {
+          velocity.x = speed;
+      } else {
+          velocity.x = 0;
+      }
+
        input = Vector3.zero;
 
       controller.Move(velocity*Time.deltaTime,input); 
 
-    if(speed > 0.1){
+    if(velocity.x > 0.1f){
 
 	transform.localScale = new Vector3(1f,1f,1f);
 
@@ -46,7 +62,7 @@ public class Velocidadenemigo : MonoBehaviour
 
       }
 
-   if(speed < -0.1f){
+   if(velocity.x < -0.1f){
 	transform.localScale = new Vector3(-1f,1f,1f);
    
    

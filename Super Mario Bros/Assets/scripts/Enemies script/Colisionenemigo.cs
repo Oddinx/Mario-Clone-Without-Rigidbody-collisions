@@ -1,17 +1,14 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using GlobalTypes;
 public class Colisionenemigo : Enemigo
 {
 
     
-    public enum tipoenemigos{
-      
-      Goomba,
-      Koopa
+   
 
-    }
+    //public tipoenemigos _tipoEnemigos;
 
     public tipoenemigos _tipoEnemigos;
 
@@ -21,9 +18,14 @@ public class Colisionenemigo : Enemigo
 
     public  bool  girando,daño,capes = false,contadormuerte;
 
-   public float vars;
+    // Cooldown to prevent shell from being kicked immediately after a stomp
+    private float stompCooldown = 0f;
+    private const float STOMP_COOLDOWN_TIME = 0.25f;
+
+
    
-   
+
+   public   LayerMask layer;
 
   
 
@@ -44,6 +46,9 @@ public class Colisionenemigo : Enemigo
     {
       controller.collisionMask &= ~(1 << 12);
 
+      // Tick down stomp cooldown
+      if(stompCooldown > 0f) stompCooldown -= Time.deltaTime;
+
       Stomp();
        
 
@@ -52,7 +57,9 @@ public class Colisionenemigo : Enemigo
      // Actgiro();
 
       Contador(capes); 
-
+          if(capes && contador > 0.3){ 
+             rayos();
+             }
       
 
        }
@@ -60,8 +67,64 @@ public class Colisionenemigo : Enemigo
 
           
 
-    void Stomp(){
 
+void rayos(){
+  Vector2 rayoiz,rayoder;
+
+
+
+ rayoiz = new Vector2(boxCollider.bounds.min.x,boxCollider.bounds.max.y);
+
+      rayoder = new Vector2(boxCollider.bounds.max.x,boxCollider.bounds.max.y);
+
+      RaycastHit2D raycastiz = Physics2D.Raycast(rayoiz,Vector2.up,0.1f,layer);
+
+        RaycastHit2D raycastder = Physics2D.Raycast(rayoder,Vector2.up,0.1f,layer);
+      Debug.DrawRay(rayoiz,new Vector2(0,0.1f),Color.green); 
+
+      
+
+        if(raycastiz!= null   ){
+
+          if(raycastiz){
+
+        
+             girando = true;
+
+           
+
+             velocidadenemigo.speed = 16;
+
+              
+
+              anim.SetBool("girar",true);
+        
+          }
+        }
+
+        if(raycastder!=null ){
+
+          if(raycastder ){
+
+       
+                  girando = true;
+       
+           
+
+         
+
+                 
+                 velocidadenemigo.speed = -16f;
+                  anim.SetBool("girar",true);
+          }
+        }
+     
+
+
+
+
+}
+    void Stomp(){
 
       Collider2D[] hits = Physics2D.OverlapBoxAll(transform.position, boxCollider.size, 0);
 
@@ -70,71 +133,50 @@ public class Colisionenemigo : Enemigo
               if(hit == boxCollider)
               continue;
 
-              if(hit.tag == "Enemigo" && !capes){
-                   
-                   velocidadenemigo.speed *= -1f;
-
-              }
+              // Koopa-specific player interaction
               if(hit.tag == "Player" && _tipoEnemigos.Equals(tipoenemigos.Koopa))  {
 
-                
-                  if( hit.transform.position.y >= boxCollider.bounds.max.y && !capes){
+                  // Player is stomping from above (use player's feet vs Koopa's top)
+                  bool stomping = hit.bounds.min.y >= boxCollider.bounds.max.y - 0.15f;
 
+                  if(stomping && !capes) {
+                     // First stomp: enter shell (capes) state
                      capes = true;
+                     girando = false;
+                     anim.SetBool("girar", false);
+                     velocidadenemigo.speed = 0;
+                     // Start cooldown so the shell is NOT kicked on the same landing
+                     stompCooldown = STOMP_COOLDOWN_TIME;
 
-                      girando = false;
+                  } else if(stomping && capes && velocidadenemigo.speed != 0) {
+                     // Stomp on a MOVING shell: stop it
+                     girando = false;
+                     anim.SetBool("girar", false);
+                     velocidadenemigo.speed = 0;
+                     stompCooldown = STOMP_COOLDOWN_TIME;
 
-                     anim.SetBool("girar",false);
-
-                    velocidadenemigo.speed = 0;
-                    Debug.Log("Playereando");
-                    
-                    
-
-                  }
-
-                 else if(capes){
-                        vars = Random.Range(0,2)*2-1;
-
-                         if(hit.transform.position.y >= boxCollider.bounds.max.y){
-
-                          girando = true;
-
-                           velocidadenemigo.speed = vars*16f;
-
-                          anim.SetBool("girar",true);
-
-                         }
-
-                     
-                       
-                  else if(boxCollider.bounds.min.x > hit.transform.position.x && boxCollider.bounds.max.y > hit.bounds.min.y ){
-                            girando = true;
-       
-           
-
-         
-
-                         velocidadenemigo.speed = 16;
-
-                          anim.SetBool("girar",true);
-                           Debug.Log("CAPES");
-                     }else if(boxCollider.bounds.min.x < hit.transform.position.x && boxCollider.bounds.max.y > hit.bounds.min.y){
-                             girando = true;
-
-           
-
-
-
+                  } else if(stomping && capes && velocidadenemigo.speed == 0 && stompCooldown <= 0f) {
+                     // Stomp on idle shell (after cooldown): kick it away from Mario
+                     float marioX = hit.transform.position.x;
+                     girando = true;
+                     if(marioX < transform.position.x) {
+                         velocidadenemigo.speed = 16f;
+                     } else {
                          velocidadenemigo.speed = -16f;
-
-                          anim.SetBool("girar",true);
-                          Debug.Log("SEPAC");
                      }
+                     anim.SetBool("girar", true);
 
-
-
-                 }
+                  } else if(!stomping && capes && velocidadenemigo.speed == 0 && stompCooldown <= 0f) {
+                     // Player walked into idle shell (after cooldown): kick it away from Mario
+                     float marioX = hit.transform.position.x;
+                     girando = true;
+                     if(marioX < transform.position.x) {
+                         velocidadenemigo.speed = 16f;
+                     } else {
+                         velocidadenemigo.speed = -16f;
+                     }
+                     anim.SetBool("girar", true);
+                  }
               }
         }
     }
@@ -144,15 +186,16 @@ public class Colisionenemigo : Enemigo
 
        public void Destroy(){
 
-    Manager._manager.Desuscripcion();
-  
+    Manager._manager.Actualizarpuntos(200);
+   pausar.Desuscribir();
 
  if (_tipoEnemigos.Equals(tipoenemigos.Goomba)){
 
 	StartCoroutine (Muerte ());
  }
       if(colision!=null && colision == this.colision){
-
+         
+        
 	
     
 
@@ -165,6 +208,44 @@ public class Colisionenemigo : Enemigo
 
     }
 
+
+    public void Muerte2(){
+     Manager._manager.Actualizarpuntos(200);
+   
+    pausar.Desuscribir();
+
+    StartCoroutine(Morir());
+      if(colision!=null && colision == this.colision){
+
+	
+    
+
+     controller.horizontalcolision -=OnHorizontalCollisionEnter;
+
+     controller.verticalcolision -=OnVerticalCollisionEnter;
+
+   }
+    
+    }
+
+IEnumerator Morir(){
+
+ transform.localScale = new Vector3(1,-1,1);
+
+ velocidadenemigo.speed = 0;
+  velocidadenemigo.velocity.y = 2f;
+
+ controller.collisionMask = 0;
+
+ boxCollider.enabled = false;
+
+   yield return new WaitForSeconds(0.4f);
+    velocidadenemigo.velocity = Vector2.zero;
+
+    Destroy(gameObject);
+
+
+}
     	void OnHorizontalCollisionEnter(Collider2D collider) {
 
        
@@ -176,7 +257,7 @@ public class Colisionenemigo : Enemigo
             if(capes != true){
 
 
-             if(playerStates.estado == 0){
+             if(playerStates._estadosmario == estadosmario.Normal){
 
               
             //collider.SendMessage ("Death", SendMessageOptions.DontRequireReceiver);
@@ -184,13 +265,15 @@ public class Colisionenemigo : Enemigo
             player.Death();
             }
 
-           if(playerStates.estado == 1){
+           if(playerStates._estadosmario != estadosmario.Normal){
              
-          playerStates.Actualizarestado(0);
+          playerStates.Actualizarestado(estadosmario.Normal);
 
           //collider.SendMessage ("TakeDamage", SendMessageOptions.DontRequireReceiver);
 
-          player.TakeDamage();
+          //player.TakeDamage();
+
+          player.Corutina();
 
           StartCoroutine(inmune());
 
@@ -202,10 +285,12 @@ public class Colisionenemigo : Enemigo
 		}
  
 
-		if (collider.tag == "Obstaculo" || collider.tag == "Ground" ){
-			   velocidadenemigo.speed *= -1f;
-
-
+		if (collider.tag == "Obstaculo" || collider.tag == "Ground" || collider.tag == "Enemigo") {
+			if (collider.bounds.center.x > boxCollider.bounds.center.x) {
+				velocidadenemigo.speed = -Mathf.Abs(velocidadenemigo.speed);
+			} else {
+				velocidadenemigo.speed = Mathf.Abs(velocidadenemigo.speed);
+			}
         }
 	}
 
@@ -315,7 +400,7 @@ public class Colisionenemigo : Enemigo
 
 	velocidadenemigo.velocity = Vector2.zero;
 		anim.SetBool("Muerte", true);
-	
+	 boxCollider.enabled = false;
 	
 		yield return new WaitForSeconds(0.08f);
 		Destroy(gameObject);
