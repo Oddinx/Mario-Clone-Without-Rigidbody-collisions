@@ -125,9 +125,14 @@ bool checkexit;
 		if(controller.collisions.below) {
 			accelRate = 16f; // Ground acceleration
 		} else {
-			// Air acceleration: if pushing opposite direction, we turn around faster (SMB1 skid equivalent in air)
-			bool pushingAgainstVelocity = (input.x > 0.01f && velocity.x < -0.01f) || (input.x < -0.01f && velocity.x > 0.01f);
-			accelRate = pushingAgainstVelocity ? 18f : 12f;
+			// Air acceleration: if pushing opposite direction, we turn around faster.
+			// If letting go of the D-pad (input.x == 0), keep momentum (accelRate = 0).
+			if (Mathf.Abs(input.x) < 0.01f) {
+				accelRate = 0f; 
+			} else {
+				bool pushingAgainstVelocity = (input.x > 0.01f && velocity.x < -0.01f) || (input.x < -0.01f && velocity.x > 0.01f);
+				accelRate = pushingAgainstVelocity ? 18f : 12f;
+			}
 		}
 
 	if( final){

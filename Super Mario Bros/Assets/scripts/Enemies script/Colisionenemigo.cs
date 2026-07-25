@@ -48,7 +48,7 @@ public class Colisionenemigo : Enemigo
     // Update is called once per frame
     void Update()
     {
-      // controller.collisionMask &= ~(1 << 12);
+      controller.collisionMask &= ~(1 << 12);
 
       // Tick down stomp cooldown
       if(stompCooldown > 0f) stompCooldown -= Time.deltaTime;
@@ -123,6 +123,27 @@ public class Colisionenemigo : Enemigo
                      }
                      anim.SetBool("girar", true);
                      Manager._manager.Actualizarpuntos(400);
+                  }
+              }
+              // Normal enemy bump / Shell kill check via overlap instead of solid collision
+              else if (hit.tag == "Enemigo") {
+                  Colisionenemigo otroEnemigo = hit.GetComponent<Colisionenemigo>();
+                  if (otroEnemigo != null) {
+                      if (girando) {
+                          // Shell killing other enemies
+                          if (!otroEnemigo.contadormuerte) {
+                              int pts = shellChain < shellPoints.Length ? shellPoints[shellChain] : 10000;
+                              shellChain++;
+                              otroEnemigo.Muerte2(pts);
+                          }
+                      } else {
+                          // Bump into each other and walk away
+                          if (hit.bounds.center.x > boxCollider.bounds.center.x && velocidadenemigo.speed > 0) {
+                              velocidadenemigo.speed = -Mathf.Abs(velocidadenemigo.speed);
+                          } else if (hit.bounds.center.x <= boxCollider.bounds.center.x && velocidadenemigo.speed < 0) {
+                              velocidadenemigo.speed = Mathf.Abs(velocidadenemigo.speed);
+                          }
+                      }
                   }
               }
         }
