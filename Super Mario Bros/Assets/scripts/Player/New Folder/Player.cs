@@ -22,6 +22,12 @@ public class Player : Personaje
 	   public KeyCode run; 
  public bool final,Intangible,grounded = true,lanzarcaparazon,choquefinal,bounce,muerto;
 
+ // InjuryTimer: invincibility frames after taking damage (mirrors SMB1 $079e)
+ // Original uses ~2 seconds (~128 frames at 60fps). We use the same duration.
+ [HideInInspector] public float injuryTimer = 0f;
+ const float INJURY_DURATION = 2f; // seconds of post-damage invincibility
+ bool isInjured => injuryTimer > 0f;
+
 
 bool checkexit;
 
@@ -55,6 +61,17 @@ bool checkexit;
 			velocity.y += gravity * Time.deltaTime;
 			controller.Move(velocity * Time.deltaTime, Vector2.zero);
 			return;
+		}
+
+		// InjuryTimer countdown (SMB1 $079e) — blink effect while invincible
+		if(injuryTimer > 0f) {
+			injuryTimer -= Time.deltaTime;
+			// Blink every 0.1s while injury timer is active
+			_renderer.enabled = (Mathf.FloorToInt(injuryTimer / 0.1f) % 2 == 0);
+			if(injuryTimer <= 0f) {
+				injuryTimer = 0f;
+				_renderer.enabled = true; // ensure visible when timer ends
+			}
 		}
  
  
@@ -479,15 +496,16 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		 if(playerStates._estadosmario != estadosmario.Normal  && boxCollider.bounds.min.y < collider.bounds.max.y  ){
 
-           if(lanzarcaparazon != true){
-            //TakeDamage ();
-
+           if(lanzarcaparazon != true && !isInjured){
+            // Mario is Grande or Fuego — shrink and start InjuryTimer
+			injuryTimer = INJURY_DURATION;
 			StartCoroutine(invencible());
 			 playerStates.Actualizarestado(estadosmario.Normal);
 		   }
 			
 		 }else if(boxCollider.bounds.min.y < collider.bounds.max.y ){
-           if(lanzarcaparazon != true){
+           if(lanzarcaparazon != true && !isInjured){
+			 // Mario is Normal — die (no InjuryTimer, death is instant)
 			 Death();
              
 		   }
