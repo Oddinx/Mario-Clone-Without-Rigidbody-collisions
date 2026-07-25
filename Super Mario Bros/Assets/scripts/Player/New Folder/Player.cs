@@ -120,18 +120,17 @@ bool checkexit;
        moveSpeed = Definirvelocidad();
 		float targetVelocityX = input.x * moveSpeed;
 
-		// Aerial momentum: linear acceleration (SMB1 uses fixed acceleration per frame)
+		bool pushingAgainstVelocity = (input.x > 0.01f && velocity.x < -0.01f) || (input.x < -0.01f && velocity.x > 0.01f);
 		float accelRate = 0f;
 		if(controller.collisions.below) {
-			accelRate = 16f; // Ground acceleration
+			accelRate = pushingAgainstVelocity ? 60f : 16f; // Ground acceleration / skidding
 		} else {
 			// Air acceleration: if pushing opposite direction, we turn around faster.
 			// If letting go of the D-pad (input.x == 0), keep momentum (accelRate = 0).
 			if (Mathf.Abs(input.x) < 0.01f) {
 				accelRate = 0f; 
 			} else {
-				bool pushingAgainstVelocity = (input.x > 0.01f && velocity.x < -0.01f) || (input.x < -0.01f && velocity.x > 0.01f);
-				accelRate = pushingAgainstVelocity ? 18f : 12f;
+				accelRate = pushingAgainstVelocity ? 60f : 12f;
 			}
 		}
 
