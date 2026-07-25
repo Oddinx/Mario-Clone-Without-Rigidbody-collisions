@@ -89,6 +89,7 @@ public class Colisionenemigo : Enemigo
                      velocidadenemigo.speed = 0;
                      // Start cooldown so the shell is NOT kicked on the same landing
                      stompCooldown = STOMP_COOLDOWN_TIME;
+                     Manager._manager.Actualizarpuntos(100);
 
                   } else if(stomping && capes && velocidadenemigo.speed != 0) {
                      // Stomp on a MOVING shell: stop it
@@ -108,6 +109,7 @@ public class Colisionenemigo : Enemigo
                          velocidadenemigo.speed = -16f;
                      }
                      anim.SetBool("girar", true);
+                     Manager._manager.Actualizarpuntos(400);
 
                   } else if(!stomping && capes && velocidadenemigo.speed == 0 && stompCooldown <= 0f) {
                      // Player walked into idle shell (after cooldown): kick it away from Mario
@@ -120,6 +122,7 @@ public class Colisionenemigo : Enemigo
                          velocidadenemigo.speed = -16f;
                      }
                      anim.SetBool("girar", true);
+                     Manager._manager.Actualizarpuntos(400);
                   }
               }
         }
