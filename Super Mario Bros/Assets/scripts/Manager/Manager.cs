@@ -16,13 +16,13 @@ public class Manager : MonoBehaviour
 
     public Text textopuntaje;
 
-    private int cantidadvidas = 5;
+    private static int cantidadvidas = 5;
     
-     private int cantidadmonedas = 99;
+     private static int cantidadmonedas = 0;
 
-      private float cantidadtiempo = 300;
+      private static float cantidadtiempo = 300;
 
-      private int puntaje = 0;
+      private static int puntaje = 0;
 
 
  
@@ -51,26 +51,26 @@ public class Manager : MonoBehaviour
     }
   
   void Start(){
-
-
       musiclevel = GetComponent<AudioSource>();
-
       musiclevel.Play();
-      
-       player = GetComponent<Player>();
-     
+      player = GetComponent<Player>();
 
+      cantidadtiempo = 300;
+      textopuntaje.text = puntaje.ToString("D6");
+      textovidas.text = cantidadvidas.ToString();
+      textomonedas.text = cantidadmonedas.ToString("D2");
+      textotiempo.text = cantidadtiempo.ToString("f0");
   }
-    void Update(){
-        if(timeractivo){
-       cantidadtiempo -= Time.deltaTime;
 
-        }
+  void Update(){
+      if(timeractivo){
+         cantidadtiempo -= Time.deltaTime;
+      }
 
       textotiempo.text = cantidadtiempo.ToString("f0");
-
       textovidas.text = cantidadvidas.ToString();
-      textomonedas.text = cantidadmonedas.ToString();
+      textomonedas.text = cantidadmonedas.ToString("D2");
+      textopuntaje.text = puntaje.ToString("D6");
 
       if(cantidadtiempo  < 0){
          timeractivo = false;
@@ -155,9 +155,7 @@ public class Manager : MonoBehaviour
 
    public void Actualizarpuntos(int puntos){
        puntaje += puntos;
-
-       textopuntaje.text = puntaje.ToString();
-   
+       textopuntaje.text = puntaje.ToString("D6");
    }
 
 

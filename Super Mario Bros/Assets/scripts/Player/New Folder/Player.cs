@@ -20,6 +20,14 @@ public class Player : Personaje
 	// Falling is 1.6x faster than rising — gives the snappy Mario feel
 	const float GRAVITY_FALL_MULTIPLIER = 1.6f;
 
+	// SMB1 Hold-to-float jump physics constants
+	const float INITIAL_JUMP_VELOCITY = 19f;
+	const float JUMP_HOLD_GRAVITY_WALK = -50f;
+	const float JUMP_HOLD_GRAVITY_RUN = -36f;
+	const float JUMP_RELEASE_GRAVITY = -100f;
+	bool isHoldingJump = false;
+	float currentJumpGravity = -50f;
+
 	// SMB1 FrictionAdderHigh ($0701) / FrictionAdderLow ($0702)
 	// Deceleration rate when releasing horizontal input on the ground
 	const float GROUND_FRICTION = 28f;
@@ -213,36 +221,33 @@ if(input.x < -0.1f){
 
 
 	if (Input.GetKeyDown (KeyCode.Space)) {
-        
-			
-		
 			if (controller.collisions.below ) {
-				velocity.y = maxJumpVelocity;
+				velocity.y = INITIAL_JUMP_VELOCITY;
+				isHoldingJump = true;
 				
-				
+				// Determine how much gravity resists the jump based on horizontal speed
+				if(Mathf.Abs(velocity.x) < 6f) {
+					currentJumpGravity = JUMP_HOLD_GRAVITY_WALK; // Heavier (shorter jump)
+				} else {
+					currentJumpGravity = JUMP_HOLD_GRAVITY_RUN;  // Lighter (higher/longer jump)
+				}
 			}
-
-			  
-		
-			
 		}
+		
 		if (Input.GetKeyUp (KeyCode.Space) ) {
-			
-			if (velocity.y > minJumpVelocity) {
-				velocity.y = minJumpVelocity;
-                 
-				 
-				
-			}
-		
+			isHoldingJump = false;
 		}
 
-		// SMB1 VerticalForce ($0709) vs VerticalForceDown ($070a):
-		// Apply extra gravity multiplier while falling so Mario drops faster than he rises
-		if(velocity.y < 0f) {
-			velocity.y += gravity * GRAVITY_FALL_MULTIPLIER * Time.deltaTime;
+		// SMB1 Variable Jump Gravity:
+		if(isHoldingJump && velocity.y > 0f) {
+			// Player is holding jump and moving up — apply floaty gravity
+			velocity.y += currentJumpGravity * Time.deltaTime;
+		} else if (!isHoldingJump && velocity.y > 0f) {
+			// Player released jump early while still moving up — apply heavy gravity to halt
+			velocity.y += JUMP_RELEASE_GRAVITY * Time.deltaTime;
 		} else {
-			velocity.y += gravity * Time.deltaTime;
+			// Falling — apply fall multiplier
+			velocity.y += gravity * GRAVITY_FALL_MULTIPLIER * Time.deltaTime;
 		}
 
 	
@@ -260,10 +265,6 @@ if(input.x < -0.1f){
 
 
 //Funciones para correr
-
-
-Jump();
-
 
      //boxcast
 
@@ -308,37 +309,6 @@ BounceActivo();
 		}
 
 		return currentMaxSpeed;
-  }
-
-
-  void Jump(){
-
-        if(_runningTimer > 1){
-
-        gravitysetter(5.5f);
-		} else if(_runningTimer > 0.5f){
-         
-
-	     gravitysetter(5f);
-           
-       } else if(_runningTimer  >0.1f){
-
-         
-
-	     
-
-		 gravitysetter(4.5f);
-		
-       }else if(_runningTimer  == 0){
-
-         gravitysetter(4f);
-
-		  
-	  }
-       
-
-      
-
   }
 
 
@@ -419,6 +389,8 @@ public IEnumerator Muerte(){
 
 anim.SetBool("Death",true);
 muerto = true;
+
+Manager._manager.Disminuirvidas();
 
 boxCollider.enabled= false;
 
