@@ -121,7 +121,9 @@ bool checkexit;
 	 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 		// Handle Ducking (Agacharse)
 		if (playerStates != null && (playerStates._estadosmario == estadosmario.Grande || playerStates._estadosmario == estadosmario.Fuego)) {
-			if (input.y < -0.1f && grounded) {
+			bool wantsToDuck = input.y < -0.1f;
+			
+			if (wantsToDuck && (grounded || isDucking)) {
 				if (!isDucking) {
 					isDucking = true;
 					if (!colliderSaved) {
@@ -133,7 +135,7 @@ bool checkexit;
 					boxCollider.offset = new Vector2(originalColliderOffset.x, originalColliderOffset.y - (originalColliderSize.y / 4f));
 					anim.SetBool("Crouch", true);
 				}
-			} else {
+			} else if (!wantsToDuck && grounded) {
 				if (isDucking) {
 					isDucking = false;
 					boxCollider.size = originalColliderSize;
