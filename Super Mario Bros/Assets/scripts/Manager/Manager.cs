@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,10 +9,6 @@ public class Manager : MonoBehaviour
     
     
     public static Manager _manager;
-
-    Pausaenemigo _penemigo;
-
-    GameObject enemigo;
 
     public Text textovidas;
     public Text textomonedas;
@@ -56,9 +52,6 @@ public class Manager : MonoBehaviour
   
   void Start(){
 
-
-         enemigo = GameObject.FindGameObjectWithTag("Enemigo");
-      _penemigo = enemigo.GetComponent<Pausaenemigo>();
 
       musiclevel = GetComponent<AudioSource>();
 

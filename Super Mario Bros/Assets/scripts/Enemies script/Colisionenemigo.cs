@@ -58,76 +58,14 @@ public class Colisionenemigo : Enemigo
 
   
        if (_tipoEnemigos.Equals(tipoenemigos.Koopa)){ 
-     // Actgiro();
+      // Actgiro();
 
       Contador(capes); 
-          if(capes && contador > 0.3){ 
-             rayos();
-             }
-      
 
        }
     }
 
-          
 
-
-void rayos(){
-  Vector2 rayoiz,rayoder;
-
-
-
- rayoiz = new Vector2(boxCollider.bounds.min.x,boxCollider.bounds.max.y);
-
-      rayoder = new Vector2(boxCollider.bounds.max.x,boxCollider.bounds.max.y);
-
-      RaycastHit2D raycastiz = Physics2D.Raycast(rayoiz,Vector2.up,0.1f,layer);
-
-        RaycastHit2D raycastder = Physics2D.Raycast(rayoder,Vector2.up,0.1f,layer);
-      Debug.DrawRay(rayoiz,new Vector2(0,0.1f),Color.green); 
-
-      
-
-        if(raycastiz!= null   ){
-
-          if(raycastiz){
-
-        
-             girando = true;
-
-           
-
-             velocidadenemigo.speed = 16;
-
-              
-
-              anim.SetBool("girar",true);
-        
-          }
-        }
-
-        if(raycastder!=null ){
-
-          if(raycastder ){
-
-       
-                  girando = true;
-       
-           
-
-         
-
-                 
-                 velocidadenemigo.speed = -16f;
-                  anim.SetBool("girar",true);
-          }
-        }
-     
-
-
-
-
-}
     void Stomp(){
 
       Collider2D[] hits = Physics2D.OverlapBoxAll(transform.position, boxCollider.size, 0);
