@@ -22,6 +22,10 @@ public class Colisionenemigo : Enemigo
     private float stompCooldown = 0f;
     private const float STOMP_COOLDOWN_TIME = 0.25f;
 
+    // SMB1 ShellChainCounter ($0125)
+    [HideInInspector] public int shellChain = 0;
+    private static readonly int[] shellPoints = { 100, 200, 400, 800, 1000, 2000, 4000, 5000, 8000 };
+
 
    
 
@@ -159,6 +163,7 @@ void rayos(){
                      // Stomp on idle shell (after cooldown): kick it away from Mario
                      float marioX = hit.transform.position.x;
                      girando = true;
+                     shellChain = 0; // Reset combo when kicked
                      if(marioX < transform.position.x) {
                          velocidadenemigo.speed = 16f;
                      } else {
@@ -170,6 +175,7 @@ void rayos(){
                      // Player walked into idle shell (after cooldown): kick it away from Mario
                      float marioX = hit.transform.position.x;
                      girando = true;
+                     shellChain = 0; // Reset combo when kicked
                      if(marioX < transform.position.x) {
                          velocidadenemigo.speed = 16f;
                      } else {
@@ -184,9 +190,9 @@ void rayos(){
  
 
 
-       public void Destroy(){
+       public void Destroy(int pts = 200){
 
-    Manager._manager.Actualizarpuntos(200);
+    Manager._manager.Actualizarpuntos(pts);
    pausar.Desuscribir();
 
  if (_tipoEnemigos.Equals(tipoenemigos.Goomba)){
@@ -209,8 +215,8 @@ void rayos(){
     }
 
 
-    public void Muerte2(){
-     Manager._manager.Actualizarpuntos(200);
+    public void Muerte2(int pts = 200){
+     Manager._manager.Actualizarpuntos(pts);
    
     pausar.Desuscribir();
 
@@ -284,6 +290,17 @@ IEnumerator Morir(){
 			
 		}
  
+
+		if (collider.tag == "Enemigo" && girando) {
+			Colisionenemigo otroEnemigo = collider.GetComponent<Colisionenemigo>();
+			if(otroEnemigo != null) {
+				// SMB1 Shell combo points
+				int pts = shellChain < shellPoints.Length ? shellPoints[shellChain] : 10000;
+				shellChain++;
+				otroEnemigo.Muerte2(pts);
+			}
+			return; // Continue moving, don't bounce
+		}
 
 		if (collider.tag == "Obstaculo" || collider.tag == "Ground" || collider.tag == "Enemigo") {
 			if (collider.bounds.center.x > boxCollider.bounds.center.x) {
