@@ -56,8 +56,13 @@ public class Player : Personaje
  const float INJURY_DURATION = 2f; // seconds of post-damage invincibility
  bool isInjured => injuryTimer > 0f;
 
-
 bool checkexit;
+
+	public Sprite spriteAgachado;
+	[HideInInspector] public bool isDucking = false;
+	private Vector2 originalColliderSize;
+	private Vector2 originalColliderOffset;
+	private bool colliderSaved = false;
 
 
 	void Start() {
@@ -115,6 +120,40 @@ bool checkexit;
  
  
 	 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+		// Handle Ducking (Agacharse)
+		if (playerStates != null && (playerStates._estadosmario == estadosmario.Grande || playerStates._estadosmario == estadosmario.Fuego)) {
+			if (input.y < -0.1f && grounded) {
+				if (!isDucking) {
+					isDucking = true;
+					if (!colliderSaved) {
+						originalColliderSize = boxCollider.size;
+						originalColliderOffset = boxCollider.offset;
+						colliderSaved = true;
+					}
+					boxCollider.size = new Vector2(originalColliderSize.x, originalColliderSize.y / 2f);
+					boxCollider.offset = new Vector2(originalColliderOffset.x, originalColliderOffset.y - (originalColliderSize.y / 4f));
+					anim.enabled = false;
+					if (spriteAgachado != null) _renderer.sprite = spriteAgachado;
+				}
+			} else {
+				if (isDucking) {
+					isDucking = false;
+					boxCollider.size = originalColliderSize;
+					boxCollider.offset = originalColliderOffset;
+					anim.enabled = true;
+				}
+			}
+		} else if (isDucking) {
+			isDucking = false;
+			boxCollider.size = originalColliderSize;
+			boxCollider.offset = originalColliderOffset;
+			anim.enabled = true;
+		}
+
+		if (isDucking) {
+			input.x = 0; // Cannot add new speed while ducking, but momentum is preserved and handled by friction
+		}
+
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
 
        moveSpeed = Definirvelocidad();
@@ -700,10 +739,12 @@ void checkg(){
 	void OnVerticalCollisionEnter(Collider2D collider){				  
 
   Prizeblock prizeblock = collider.gameObject.GetComponent<Prizeblock>();
-	
-     if(collider.tag == "Block" && boxCollider.bounds.max.y < collider.bounds.min.y){
 
-					  if(playerStates._estadosmario != estadosmario.Normal && prizeblock._tipobloque == tipobloque.Normal){
+     if(collider.tag == "Block" && boxCollider.bounds.max.y < collider.bounds.min.y){
+		// Block bounce: Force velocity down immediately to prevent clipping through
+		velocity.y = -2f;
+						
+		if(playerStates._estadosmario != estadosmario.Normal && prizeblock._tipobloque == tipobloque.Normal){
                          
 
                                 prizeblock.Destroy();

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -87,6 +87,9 @@ public class Bolafuego : MonoBehaviour
 
                           Destroy(this.gameObject);
                       }
+                  } else if (hitPos.normal.y > 0) {
+                      // SMB1 fixed bounce force instead of generic physics bounce
+                      rb.linearVelocity = new Vector2(velocidad, 12f);
                   }
               }
       }
