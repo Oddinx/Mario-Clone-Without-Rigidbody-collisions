@@ -24,6 +24,18 @@ public class Player : Personaje
 	// Deceleration rate when releasing horizontal input on the ground
 	const float GROUND_FRICTION = 28f;
 
+	// SMB1 MaximumRightSpeed / MaximumLeftSpeed ($0450/$0456)
+	// Three distinct speed caps matching the original game feel
+	const float MAX_WALK_SPEED   = 5.5f;  // no run button held
+	const float MAX_RUN_SPEED    = 9.0f;  // Z held, before sprint threshold
+	const float MAX_SPRINT_SPEED = 11.0f; // Z held + RunningTimer >= runTime
+	[HideInInspector] public float currentMaxSpeed = 5.5f; // tracked for clamping
+
+	// SMB1 StarInvincibleTimer ($079f)
+	[HideInInspector] public float starTimer = 0f;
+	const float STAR_DURATION = 10f;       // ~10 seconds like the original
+	bool isStarInvincible => starTimer > 0f;
+
     public float timerfinal;
 
      public bool buttoninactive;
@@ -78,7 +90,18 @@ bool checkexit;
 			_renderer.enabled = (Mathf.FloorToInt(injuryTimer / 0.1f) % 2 == 0);
 			if(injuryTimer <= 0f) {
 				injuryTimer = 0f;
-				_renderer.enabled = true; // ensure visible when timer ends
+				_renderer.enabled = true;
+			}
+		}
+
+		// StarInvincibleTimer countdown (SMB1 $079f) — faster blink effect
+		if(starTimer > 0f) {
+			starTimer -= Time.deltaTime;
+			// Fast color cycle: blink every 0.05s (twice as fast as injury)
+			_renderer.enabled = (Mathf.FloorToInt(starTimer / 0.05f) % 2 == 0);
+			if(starTimer <= 0f) {
+				starTimer = 0f;
+				_renderer.enabled = true;
 			}
 		}
  
@@ -136,6 +159,9 @@ bool checkexit;
 		}
 
 			
+		// Clamp horizontal velocity to current max speed (SMB1 MaximumRightSpeed/Left $0450/$0456)
+		velocity.x = Mathf.Clamp(velocity.x, -currentMaxSpeed, currentMaxSpeed);
+
 	}else{
 
 		// SMB1 FrictionAdderHigh/Low ($0701/$0702):
@@ -145,6 +171,9 @@ bool checkexit;
 		} else {
 			velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, smoothTime);
 		}
+
+		// Clamp horizontal velocity to current max speed
+		velocity.x = Mathf.Clamp(velocity.x, -currentMaxSpeed, currentMaxSpeed);
 
 		input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 	}
@@ -253,29 +282,32 @@ BounceActivo();
 
  public float Definirvelocidad(){
 
-   	float speed = xSpeed;
-		if (Input.GetKey (KeyCode.Z)) {
-
-			speed *= runningMultiplyer;
+		// SMB1 MaximumRightSpeed ($0450) / MaximumLeftSpeed ($0456)
+		// Three speed tiers instead of a multiplier chain
+		if (Input.GetKey(KeyCode.Z)) {
 
 			if (grounded)
 				_runningTimer += Time.fixedDeltaTime;
 
-			_runningTimer = Mathf.Clamp (_runningTimer, 0f, 2f);
+			_runningTimer = Mathf.Clamp(_runningTimer, 0f, 2f);
 
-			if (_runningTimer >= runTime)
-				speed *= runningMultiplyer * 0.625f;
-		} 
-		else if (Input.GetKeyUp (KeyCode.Z)) {
+			if (_runningTimer >= runTime) {
+				// Full sprint — held Z long enough
+				currentMaxSpeed = MAX_SPRINT_SPEED;
+			} else {
+				// Running — Z held but sprint not yet reached
+				currentMaxSpeed = MAX_RUN_SPEED;
+			}
+		} else {
+			if (Input.GetKeyUp(KeyCode.Z))
+				_runningTimer = 0f;
 
-			_runningTimer = 0f;
+			// Gradually lower max speed back to walk when Z released
+			// (mirrors how SMB1 doesn't hard-cut the speed on release)
+			currentMaxSpeed = Mathf.MoveTowards(currentMaxSpeed, MAX_WALK_SPEED, 8f * Time.deltaTime);
 		}
 
-		return speed;
-
-
-
-
+		return currentMaxSpeed;
   }
 
 
@@ -351,6 +383,11 @@ public void Corutina(){
 
 	StartCoroutine(invencible());
 
+}
+
+// Activa el timer de estrella (SMB1 $079f)
+public void ActivarEstrella(){
+	starTimer = STAR_DURATION;
 }
 IEnumerator invencible(){
 	
@@ -492,8 +529,12 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		if(collider.tag =="Enemigo"){
 
-		
-        
+		// StarInvincibleTimer (SMB1 $079f): kill any enemy on lateral contact
+		if(isStarInvincible) {
+			colisionenemigo.Destroy();
+			return;
+		}
+
 		if( colisionenemigo._tipoEnemigos == tipoenemigos.Goomba){
 
 		
