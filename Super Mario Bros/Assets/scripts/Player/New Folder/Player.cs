@@ -150,8 +150,8 @@ bool checkexit;
 			anim.SetBool("Crouch", false);
 		}
 
-		if (isDucking) {
-			input.x = 0; // Cannot add new speed while ducking, but momentum is preserved and handled by friction
+		if (isDucking && grounded) {
+			input.x = 0; // Cannot add new speed while ducking on the ground, sliding friction applies
 		}
 
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
@@ -218,7 +218,8 @@ bool checkexit;
 		// SMB1 FrictionAdderHigh/Low ($0701/$0702) & Acceleration:
 		// Linear acceleration/deceleration feels natural and matches SMB1 unlike SmoothDamp
 		if(controller.collisions.below && Mathf.Abs(input.x) < 0.01f) {
-			velocity.x = Mathf.MoveTowards(velocity.x, 0f, GROUND_FRICTION * Time.deltaTime);
+			float currentFriction = isDucking ? 8f : GROUND_FRICTION;
+			velocity.x = Mathf.MoveTowards(velocity.x, 0f, currentFriction * Time.deltaTime);
 		} else {
 			velocity.x = Mathf.MoveTowards(velocity.x, targetVelocityX, accelRate * Time.deltaTime);
 		}
