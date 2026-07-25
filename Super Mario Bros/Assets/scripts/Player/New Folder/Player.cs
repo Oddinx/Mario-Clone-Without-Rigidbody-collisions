@@ -120,14 +120,14 @@ bool checkexit;
        moveSpeed = Definirvelocidad();
 		float targetVelocityX = input.x * moveSpeed;
 
-		// Aerial momentum: when pushing against current direction, apply more resistance
-		float smoothTime;
+		// Aerial momentum: linear acceleration (SMB1 uses fixed acceleration per frame)
+		float accelRate = 0f;
 		if(controller.collisions.below) {
-			smoothTime = accelerationTimeGrounded;
+			accelRate = 16f; // Ground acceleration
 		} else {
-			// If input opposes current horizontal velocity, use higher smoothing time
+			// Air acceleration: if pushing opposite direction, we turn around faster (SMB1 skid equivalent in air)
 			bool pushingAgainstVelocity = (input.x > 0.01f && velocity.x < -0.01f) || (input.x < -0.01f && velocity.x > 0.01f);
-			smoothTime = pushingAgainstVelocity ? accelerationTimeAirborneAgainst : accelerationTimeAirborne;
+			accelRate = pushingAgainstVelocity ? 18f : 12f;
 		}
 
 	if( final){
@@ -172,12 +172,12 @@ bool checkexit;
 
 	}else{
 
-		// SMB1 FrictionAdderHigh/Low ($0701/$0702):
-		// When no horizontal input on ground, decelerate with friction instead of SmoothDamp snap
+		// SMB1 FrictionAdderHigh/Low ($0701/$0702) & Acceleration:
+		// Linear acceleration/deceleration feels natural and matches SMB1 unlike SmoothDamp
 		if(controller.collisions.below && Mathf.Abs(input.x) < 0.01f) {
 			velocity.x = Mathf.MoveTowards(velocity.x, 0f, GROUND_FRICTION * Time.deltaTime);
 		} else {
-			velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, smoothTime);
+			velocity.x = Mathf.MoveTowards(velocity.x, targetVelocityX, accelRate * Time.deltaTime);
 		}
 
 		// Clamp horizontal velocity to current max speed

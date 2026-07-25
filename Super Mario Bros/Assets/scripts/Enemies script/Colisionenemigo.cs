@@ -48,7 +48,7 @@ public class Colisionenemigo : Enemigo
     // Update is called once per frame
     void Update()
     {
-      controller.collisionMask &= ~(1 << 12);
+      // controller.collisionMask &= ~(1 << 12);
 
       // Tick down stomp cooldown
       if(stompCooldown > 0f) stompCooldown -= Time.deltaTime;
