@@ -16,6 +16,14 @@ public class Player : Personaje
 	public float moveSpeed = 6;
 	float velocityXSmoothing;
 
+	// SMB1 VerticalForce ($0709) / VerticalForceDown ($070a)
+	// Falling is 1.6x faster than rising — gives the snappy Mario feel
+	const float GRAVITY_FALL_MULTIPLIER = 1.6f;
+
+	// SMB1 FrictionAdderHigh ($0701) / FrictionAdderLow ($0702)
+	// Deceleration rate when releasing horizontal input on the ground
+	const float GROUND_FRICTION = 28f;
+
     public float timerfinal;
 
      public bool buttoninactive;
@@ -130,7 +138,13 @@ bool checkexit;
 			
 	}else{
 
-		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, smoothTime);
+		// SMB1 FrictionAdderHigh/Low ($0701/$0702):
+		// When no horizontal input on ground, decelerate with friction instead of SmoothDamp snap
+		if(controller.collisions.below && Mathf.Abs(input.x) < 0.01f) {
+			velocity.x = Mathf.MoveTowards(velocity.x, 0f, GROUND_FRICTION * Time.deltaTime);
+		} else {
+			velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, smoothTime);
+		}
 
 		input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 	}
@@ -194,7 +208,13 @@ if(input.x < -0.1f){
 		
 		}
 
-		velocity.y += gravity * Time.deltaTime;
+		// SMB1 VerticalForce ($0709) vs VerticalForceDown ($070a):
+		// Apply extra gravity multiplier while falling so Mario drops faster than he rises
+		if(velocity.y < 0f) {
+			velocity.y += gravity * GRAVITY_FALL_MULTIPLIER * Time.deltaTime;
+		} else {
+			velocity.y += gravity * Time.deltaTime;
+		}
 
 	
 		controller.Move (velocity * Time.deltaTime, input);

@@ -82,3 +82,6 @@ Thumbs.db
 # DLLs
 *.dll
 *.dll.mvfrm
+
+# Personal notes / documentation (not part of the project source)
+*.md
