@@ -58,8 +58,6 @@ public class Player : Personaje
 
 bool checkexit;
 
-	public Sprite spriteAgachadoGrande;
-	public Sprite spriteAgachadoFuego;
 	[HideInInspector] public bool isDucking = false;
 	private Vector2 originalColliderSize;
 	private Vector2 originalColliderOffset;
@@ -133,26 +131,21 @@ bool checkexit;
 					}
 					boxCollider.size = new Vector2(originalColliderSize.x, originalColliderSize.y / 2f);
 					boxCollider.offset = new Vector2(originalColliderOffset.x, originalColliderOffset.y - (originalColliderSize.y / 4f));
-					anim.enabled = false;
-					if (playerStates._estadosmario == estadosmario.Grande && spriteAgachadoGrande != null) {
-						_renderer.sprite = spriteAgachadoGrande;
-					} else if (playerStates._estadosmario == estadosmario.Fuego && spriteAgachadoFuego != null) {
-						_renderer.sprite = spriteAgachadoFuego;
-					}
+					anim.SetBool("Crouch", true);
 				}
 			} else {
 				if (isDucking) {
 					isDucking = false;
 					boxCollider.size = originalColliderSize;
 					boxCollider.offset = originalColliderOffset;
-					anim.enabled = true;
+					anim.SetBool("Crouch", false);
 				}
 			}
 		} else if (isDucking) {
 			isDucking = false;
 			boxCollider.size = originalColliderSize;
 			boxCollider.offset = originalColliderOffset;
-			anim.enabled = true;
+			anim.SetBool("Crouch", false);
 		}
 
 		if (isDucking) {
