@@ -89,7 +89,7 @@ public class Bolafuego : MonoBehaviour
                       }
                   } else if (hitPos.normal.y > 0) {
                       // SMB1 fixed bounce force instead of generic physics bounce
-                      rb.linearVelocity = new Vector2(velocidad, 12f);
+                      rb.linearVelocity = new Vector2(velocidad, 7.5f);
                   }
               }
       }
