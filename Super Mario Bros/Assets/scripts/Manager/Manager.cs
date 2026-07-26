@@ -62,8 +62,22 @@ public class Manager : MonoBehaviour
       textotiempo.text = cantidadtiempo.ToString("f0");
   }
 
+  private bool isGamePaused = false;
+
   void Update(){
-      if(timeractivo){
+      // Manual Pause Toggle
+      if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Return)) {
+          isGamePaused = !isGamePaused;
+          if (isGamePaused) {
+              Time.timeScale = 0f;
+              if (musiclevel != null) musiclevel.Pause();
+          } else {
+              Time.timeScale = 1f;
+              if (musiclevel != null) musiclevel.Play();
+          }
+      }
+
+      if(timeractivo && !isGamePaused){
          cantidadtiempo -= Time.deltaTime;
       }
 

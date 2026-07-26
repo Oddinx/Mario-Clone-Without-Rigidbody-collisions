@@ -460,6 +460,7 @@ public IEnumerator Muerte(){
 anim.SetBool("Death",true);
 muerto = true;
 
+Manager._manager.Pausarenemigo();
 Manager._manager.Disminuirvidas();
 
 boxCollider.enabled= false;
