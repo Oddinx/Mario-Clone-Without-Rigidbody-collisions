@@ -33,6 +33,8 @@ public class PiranhaPlant : Enemigo {
         if (isDead) return;
         if (pausar != null && pausar.ps != null && !pausar.ps.enabled) return;
         
+        CheckPlayerCollision();
+
         switch (currentState) {
             case State.WaitingHidden:
                 timer -= Time.deltaTime;
@@ -76,24 +78,27 @@ public class PiranhaPlant : Enemigo {
         }
     }
     
-    void OnTriggerEnter2D(Collider2D col) {
-        if (isDead) return;
-        
-        if (col.tag == "Player") {
-            if (playerStates != null) {
-                if (playerStates._estadosmario == estadosmario.Normal) {
-                    player.Death();
-                } else {
-                    playerStates.Actualizarestado(estadosmario.Normal);
-                    player.Corutina();
-                    StartCoroutine(inmuneLocal());
+    void CheckPlayerCollision() {
+        if (isDead || boxCollider == null || !boxCollider.enabled) return;
+
+        Collider2D[] hits = Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0);
+        foreach (Collider2D hit in hits) {
+            if (hit.tag == "Player") {
+                if (playerStates != null) {
+                    if (playerStates._estadosmario == estadosmario.Normal) {
+                        player.Death();
+                    } else {
+                        playerStates.Actualizarestado(estadosmario.Normal);
+                        player.Corutina();
+                        StartCoroutine(inmuneLocal());
+                    }
                 }
+                break;
             }
         }
     }
-    
+
     public IEnumerator inmuneLocal() {
-        // Desactiva el collider de la planta para que no haga más daño a Mario temporalmente
         if (boxCollider != null) {
             boxCollider.enabled = false;
             yield return new WaitForSeconds(1.2f);
