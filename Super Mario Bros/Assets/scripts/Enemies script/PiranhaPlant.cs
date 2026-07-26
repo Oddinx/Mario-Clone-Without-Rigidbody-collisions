@@ -84,6 +84,11 @@ public class PiranhaPlant : Enemigo {
         Collider2D[] hits = Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0);
         foreach (Collider2D hit in hits) {
             if (hit.tag == "Player") {
+                if (player != null && player.isStarInvincible) {
+                    Muerte2(100);
+                    return; // Mario is invincible, kill Piranha
+                }
+
                 if (playerStates != null) {
                     if (playerStates._estadosmario == estadosmario.Normal) {
                         player.Death();
@@ -113,23 +118,7 @@ public class PiranhaPlant : Enemigo {
         Manager._manager.Actualizarpuntos(pts);
         if (pausar != null) pausar.Desuscribir();
         
-        StartCoroutine(Morir());
-    }
-    
-    IEnumerator Morir() {
-        if (anim != null) anim.enabled = false;
-        transform.localScale = new Vector3(1, -1, 1);
-        if (boxCollider != null) boxCollider.enabled = false;
-        
-        float fallSpeed = 2f;
-        float duration = 1.5f;
-        while (duration > 0f) {
-            transform.position += Vector3.down * fallSpeed * Time.deltaTime;
-            fallSpeed += 9.8f * Time.deltaTime;
-            duration -= Time.deltaTime;
-            yield return null;
-        }
-        
+        // La piraña simplemente desaparece al morir por bola de fuego
         Destroy(gameObject);
     }
 }

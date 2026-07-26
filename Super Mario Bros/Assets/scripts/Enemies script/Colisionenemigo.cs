@@ -77,6 +77,11 @@ public class Colisionenemigo : Enemigo
 
               // Koopa-specific player interaction
               if(hit.tag == "Player" && _tipoEnemigos.Equals(tipoenemigos.Koopa))  {
+                  
+                  if (player != null && player.isStarInvincible) {
+                      Muerte2(100);
+                      return;
+                  }
 
                   // Player is stomping from above (use player's feet vs Koopa's top)
                   bool stomping = hit.bounds.min.y >= boxCollider.bounds.max.y - 0.15f;
@@ -222,6 +227,11 @@ IEnumerator Morir(){
            
            if (collider.tag == "Player") {
             
+            if (player.isStarInvincible) {
+                Muerte2(100);
+                return; // Si Mario tiene estrella, muere el enemigo y no le hace daño a Mario
+            }
+
             if(capes != true){
 
 

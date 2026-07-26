@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using GlobalTypes;
@@ -14,10 +14,10 @@ public class Prizeblock : MonoBehaviour
 
 
 
-    public  GameObject[] Powerups = new GameObject[4];
+    public  GameObject[] Powerups = new GameObject[5];
     
 
-
+     Estrella estrella;
      Hongo hongo;
 
      Moneda moneda;
@@ -149,6 +149,13 @@ Colision();
 
           hongo.Accionflor();
 
+          break;
+
+          case tipopowerups.Estrella:
+          
+          if(estrella != null){
+              estrella.Accion();
+          }
           break;
 
          }
@@ -314,6 +321,12 @@ hongo = Premio.GetComponent<Hongo>();
 
 
 
+      }
+
+      if (_tipopowerups == tipopowerups.Estrella) {
+          // Asumiendo que Powerups[3] será la estrella
+          Premio = (GameObject)Instantiate(Powerups[3], new Vector3(transform.position.x, transform.position.y + 0.7f, 0), Quaternion.identity);
+          estrella = Premio.GetComponent<Estrella>();
       }
 
     //premioscodigo = Premio.GetComponent<Premios>();

@@ -41,8 +41,8 @@ public class Player : Personaje
 
 	// SMB1 StarInvincibleTimer ($079f)
 	[HideInInspector] public float starTimer = 0f;
-	const float STAR_DURATION = 10f;       // ~10 seconds like the original
-	bool isStarInvincible => starTimer > 0f;
+	const float STAR_DURATION = 50f;       // ~10 seconds like the original
+	public bool isStarInvincible => starTimer > 0f;
 
     public float timerfinal;
 
@@ -110,14 +110,19 @@ bool checkexit;
 			}
 		}
 
-		// StarInvincibleTimer countdown (SMB1 $079f) — faster blink effect
+		// StarInvincibleTimer countdown (SMB1 $079f) — fast color cycle
 		if(starTimer > 0f) {
 			starTimer -= Time.deltaTime;
-			// Fast color cycle: blink every 0.05s (twice as fast as injury)
-			_renderer.enabled = (Mathf.FloorToInt(starTimer / 0.05f) % 2 == 0);
+			
+            int colorIndex = Mathf.FloorToInt(starTimer / 0.05f) % 4;
+            if (colorIndex == 0) _renderer.color = Color.white;
+            else if (colorIndex == 1) _renderer.color = new Color(0.5f, 1f, 0.5f); // light green
+            else if (colorIndex == 2) _renderer.color = new Color(1f, 0.5f, 0.5f); // light red
+            else _renderer.color = new Color(1f, 0.8f, 0.2f); // yellow/orange
+
 			if(starTimer <= 0f) {
 				starTimer = 0f;
-				_renderer.enabled = true;
+				_renderer.color = Color.white;
 			}
 		}
  
@@ -574,7 +579,10 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		// StarInvincibleTimer (SMB1 $079f): kill any enemy on lateral contact
 		if(isStarInvincible) {
-			colisionenemigo.Destroy();
+            Enemigo[] enemigos = collider.GetComponents<Enemigo>();
+            foreach (Enemigo e in enemigos) {
+                e.Muerte2();
+            }
 			return;
 		}
 
@@ -684,7 +692,13 @@ void OnHorizontalCollisionEnter(Collider2D collider) {
 
 		if(collider.tag =="Enemigo"){
 
-			
+			if(isStarInvincible) {
+                Enemigo[] enemigos = collider.GetComponents<Enemigo>();
+                foreach (Enemigo e in enemigos) {
+                    e.Muerte2();
+                }
+				return;
+			}
 			
          
         	if(colisionenemigo._tipoEnemigos == tipoenemigos.Goomba ){

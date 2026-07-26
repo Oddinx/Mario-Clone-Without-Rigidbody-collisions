@@ -15,9 +15,9 @@ namespace GlobalTypes
 
      Moneda,
 
-     Vida
+     Vida,
 
-
+     Estrella
 
     }
 

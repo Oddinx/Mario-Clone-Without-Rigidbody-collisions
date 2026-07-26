@@ -131,10 +131,14 @@ public class Goombamovement : Enemigo
   void OnVerticalCollisionEnter(Collider2D collider) {
 
       	if (collider.tag == "Player") {
-
+            if (player != null && player.isStarInvincible) {
+                Enemigo[] enemigos = GetComponents<Enemigo>();
+                foreach (Enemigo e in enemigos) {
+                    e.Muerte2(100);
+                }
+                return;
+            }
             
-
-         
 			   Destroy();
          Debug.Log("Destruido");
 		}
@@ -149,6 +153,13 @@ public class Goombamovement : Enemigo
           
 
     	if (collider.tag == "Player") {
+            if (player != null && player.isStarInvincible) {
+                Enemigo[] enemigos = GetComponents<Enemigo>();
+                foreach (Enemigo e in enemigos) {
+                    e.Muerte2(100);
+                }
+                return;
+            }
 
              if(playerStates.estado == 0){
 
