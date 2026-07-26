@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -44,6 +44,8 @@ protected Enemigo enemigo;
      
     }
 
-
+    public virtual void Muerte2(int pts = 200) {
+        // Base implementation does nothing
+    }
 
 }

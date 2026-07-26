@@ -177,7 +177,7 @@ public class Colisionenemigo : Enemigo
     }
 
 
-    public void Muerte2(int pts = 200){
+    public override void Muerte2(int pts = 200){
      Manager._manager.Actualizarpuntos(pts);
    
     pausar.Desuscribir();

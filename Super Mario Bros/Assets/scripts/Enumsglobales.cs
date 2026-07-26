@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,8 +33,8 @@ namespace GlobalTypes
       public enum tipoenemigos{
       
       Goomba,
-      Koopa
-
+      Koopa,
+      PlantaPirana
     }
 
     public enum estadosmario{

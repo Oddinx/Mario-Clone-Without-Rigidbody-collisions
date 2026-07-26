@@ -53,12 +53,12 @@ public class Bolafuego : MonoBehaviour
 
      void OnTriggerEnter2D(Collider2D col)
     {
-      Colisionenemigo colisionenemigo = col.gameObject.GetComponent<Colisionenemigo>();
+      Enemigo enemigo = col.gameObject.GetComponent<Enemigo>();
          if(col.tag == "Enemigo"){
 
              Destroy(this.gameObject);
 
-             colisionenemigo.Muerte2();
+             if (enemigo != null) enemigo.Muerte2();
          }
 
     }
